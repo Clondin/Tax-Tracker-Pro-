@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { GoogleGenAI } from "@google/genai";
 import { Paystub, IncomeItem } from '../types';
 import { mapPaystubToIncomeItem } from '../utils/paystubMapper';
 
@@ -90,50 +89,20 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
 
             setAiState('processing');
 
-            const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-            if (!apiKey) {
-                throw new Error('Missing VITE_GEMINI_API_KEY environment variable');
-            }
-
-            const ai = new GoogleGenAI({ apiKey });
-            
-            const prompt = `
-                Analyze this paystub image and extract payroll data into a JSON structure matching this schema:
-                {
-                    "employerName": "string",
-                    "payDate": "YYYY-MM-DD",
-                    "payFrequency": "weekly" | "biweekly" | "semimonthly" | "monthly",
-                    "stateOfEmployment": "string (2 letter code)",
-                    "earnings": [
-                        { "description": "string", "amountCurrent": number, "amountYTD": number, "type": "regular" | "overtime" | "bonus" | "other" }
-                    ],
-                    "taxes": [
-                        { "description": "string", "amountCurrent": number, "amountYTD": number, "authority": "federal" | "state", "type": "fed_withholding" | "ss" | "med" | "state_withholding" | "sdi" | "other" }
-                    ],
-                    "deductions": [
-                        { "description": "string", "amountCurrent": number, "amountYTD": number, "type": "pre_tax" | "after_tax", "category": "health" | "401k" | "hsa" | "other" }
-                    ]
-                }
-                Return ONLY valid JSON. If values are missing, use 0 or empty string.
-            `;
-
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: {
-                    parts: [
-                        { inlineData: { mimeType: file.type, data: base64Data } },
-                        { text: prompt }
-                    ]
+            const response = await fetch('/api/gemini/paystub', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
                 },
-                config: {
-                    responseMimeType: 'application/json'
-                }
+                body: JSON.stringify({ base64Data, mimeType: file.type })
             });
 
-            const text = response.text;
-            if (!text) throw new Error("No response from AI");
-            
-            const data = JSON.parse(text);
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => ({}));
+                throw new Error(errorBody.error || 'Failed to process paystub');
+            }
+
+            const { data } = await response.json();
 
             // Map AI response to internal state
             setStub(prev => ({

@@ -15,9 +15,11 @@ View your app in AI Studio: https://ai.studio/apps/drive/1QWzE6u4tg920j_UoXhi6gD
 
 1. Install dependencies:
    `npm install`
-2. Set `VITE_GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key (Vite only exposes variables prefixed with `VITE_` to the browser)
-3. Run the app:
-   `npm run dev`
+2. Provide a Gemini API key on the **server side** via the `GEMINI_API_KEY` environment variable (a default key is configured in `server.js` but you should override it in production).
+3. Build the client bundle:
+   `npm run build`
+4. Start the production server with the Gemini proxy endpoint:
+   `npm start`
 
 ## Future improvements
 
