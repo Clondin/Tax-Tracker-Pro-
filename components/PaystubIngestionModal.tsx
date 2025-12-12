@@ -80,6 +80,19 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
             setAiState('uploading');
             setErrorMsg('');
             
+            // Safe API Key Access
+            let apiKey = '';
+            try {
+                apiKey = process.env.API_KEY || '';
+            } catch (e) {
+                console.warn("process.env not available, checking if API_KEY is injected globally or proceed without it for demo");
+            }
+
+            if (!apiKey) {
+                 // Fallback or Error if strict
+                 // console.error("No API KEY found"); 
+            }
+
             // Convert file to base64
             const base64Data = await new Promise<string>((resolve, reject) => {
                 const reader = new FileReader();
@@ -90,7 +103,7 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
 
             setAiState('processing');
 
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const ai = new GoogleGenAI({ apiKey: apiKey });
             
             const prompt = `
                 Analyze this paystub image and extract payroll data into a JSON structure matching this schema:
