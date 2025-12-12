@@ -105,21 +105,12 @@ const server = http.createServer(async (req, res) => {
           }
         });
 
-        const text = typeof response.text === 'function'
-          ? response.text()
-          : response.candidates?.[0]?.content?.parts?.map(part => part.text).join('') || '';
-
-        if (!text?.trim()) {
-          console.error('Empty response from Gemini SDK', response);
+        const text = response.text;
+        if (!text) {
           return sendJson(res, 502, { error: 'No response from Gemini' });
         }
 
-        try {
-          return sendJson(res, 200, { data: JSON.parse(text) });
-        } catch (parseError) {
-          console.error('Failed to parse Gemini response', parseError, text);
-          return sendJson(res, 502, { error: 'Gemini returned non-JSON output' });
-        }
+        return sendJson(res, 200, { data: JSON.parse(text) });
       } catch (error) {
         console.error('Gemini paystub processing failed', error);
         return sendJson(res, 500, { error: 'Failed to process paystub' });
