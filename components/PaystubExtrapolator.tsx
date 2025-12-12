@@ -1,4 +1,3 @@
-import React from 'react';
-// This component is deprecated.
-const PaystubExtrapolator = () => <div />;
+// Deprecated.
+const PaystubExtrapolator = () => null;
 export default PaystubExtrapolator;

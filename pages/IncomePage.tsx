@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { IncomeItem, TaxResult, TaxPayer, Paystub } from '../types';
 import PaystubIngestionModal from '../components/PaystubIngestionModal';
 
@@ -23,6 +23,7 @@ const HelpTooltip: React.FC<{text: string}> = ({text}) => (
 
 const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult, taxPayer }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [activeTab, setActiveTab] = useState<'W-2' | 'Business' | 'Investment' | 'Rental'>('W-2');
     const [editingId, setEditingId] = useState<string | null>(null);
     const [showReconciliation, setShowReconciliation] = useState(false);
@@ -40,6 +41,18 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
         details: {}
     });
 
+    // Handle deep linking from Documents Page
+    useEffect(() => {
+        if (location.state && location.state.editId) {
+            const item = incomes.find(i => i.id === location.state.editId);
+            if (item) {
+                handleEdit(item);
+                // Clear state to prevent re-opening on refresh
+                window.history.replaceState({}, document.title);
+            }
+        }
+    }, [location.state, incomes]);
+
     const isMarriedJoint = taxPayer?.filingStatus === 'married_joint';
 
     const resetForm = () => {
@@ -53,6 +66,9 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
     };
 
     const handleEdit = (item: IncomeItem) => {
+        // If it's an AI paystub, allow opening the modal again for review? 
+        // For now, let's open the manual form populated with data, but show a badge.
+        // Or strictly open modal:
         if (item.originalPaystub) {
             setSelectedPaystub(item.originalPaystub);
             setShowPaystubModal(true);
@@ -96,7 +112,6 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
     };
 
     const handlePaystubImport = (item: IncomeItem) => {
-        // Check if updating existing
         const exists = incomes.find(i => i.id === item.id);
         if (exists) {
             setIncomes(incomes.map(i => i.id === item.id ? item : i));
@@ -117,8 +132,7 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
         setShowPaystubModal(true);
     };
 
-    // Calculate inferred Box 3/5 for UI
-    const inferredBox3 = (form.amount || 0) + (form.details?.w2_box12_code_d_401k || 0) + (form.details?.w2_fsa_health_amount || 0) * -1; // Basic logic for display only
+    const inferredBox3 = (form.amount || 0) + (form.details?.w2_box12_code_d_401k || 0) + (form.details?.w2_fsa_health_amount || 0) * -1; 
 
     // --- 52 Week Chart ---
     const chartData = Array.from({ length: 52 }, (_, i) => i + 1).map(week => {
@@ -138,7 +152,7 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
     });
 
     return (
-        <div className="flex flex-col xl:flex-row gap-8 h-full relative">
+        <div className="flex flex-col xl:flex-row gap-8 h-full relative animate-in fade-in duration-500">
             {showPaystubModal && (
                 <PaystubIngestionModal 
                     onSave={handlePaystubImport}
@@ -150,15 +164,15 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
             <div className="flex-1 flex flex-col gap-6">
                 <div>
                     <h1 className="text-3xl font-bold text-primary dark:text-white mb-2">Income & Wages</h1>
-                    <p className="text-neutral-500">Enter your income sources. Click any entry below to edit details.</p>
+                    <p className="text-neutral-500">Report all sources of income. Use the Paystub tools for accuracy.</p>
                 </div>
 
                 {incomes.length > 0 && (
-                    <div className="bg-card-light dark:bg-card-dark rounded-xl border border-border-light dark:border-border-dark p-6 h-64 shadow-sm">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-sm font-bold uppercase text-neutral-500">52-Week Accumulation</h3>
+                    <div className="bg-card-light dark:bg-card-dark rounded-xl border border-border-light dark:border-border-dark p-6 h-64 shadow-sm relative overflow-hidden">
+                        <div className="flex justify-between items-center mb-4 relative z-10">
+                            <h3 className="text-sm font-bold uppercase text-neutral-500">Income Velocity (YTD)</h3>
                             <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 px-3 py-1 rounded-full font-bold shadow-sm">
-                                Est. Total: ${incomes.reduce((a, b) => a + b.amount, 0).toLocaleString()}
+                                Total: ${incomes.reduce((a, b) => a + b.amount, 0).toLocaleString()}
                             </span>
                         </div>
                         <ResponsiveContainer width="100%" height="100%">
@@ -206,25 +220,26 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                         </div>
                     )}
                     
-                    <div className="flex justify-between items-center mb-6 mt-2">
-                        <div className="flex items-center gap-3 flex-wrap">
-                             <h2 className="text-xl font-bold">{editingId ? `Edit ${form.description}` : `Add ${activeTab} Income`}</h2>
+                    <div className="flex flex-wrap justify-between items-center mb-6 mt-2 gap-4">
+                        <h2 className="text-xl font-bold">{editingId ? `Edit ${form.description}` : `Add ${activeTab} Income`}</h2>
+                        
+                        <div className="flex gap-2">
                              {activeTab === 'W-2' && (
                                  <button 
                                     onClick={openIngestionModal}
-                                    className="text-xs font-bold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                                    className="text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
                                  >
-                                     <span className="material-symbols-outlined text-[14px]">receipt_long</span> Ingest Paystub (AI)
+                                     <span className="material-symbols-outlined text-[16px]">document_scanner</span> 
+                                     Auto-Scan Paystub
                                  </button>
                              )}
+                            {editingId && (
+                                <button onClick={resetForm} className="text-xs font-bold text-neutral-500 px-4 py-2 border rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">Cancel</button>
+                            )}
                         </div>
-                        {editingId && (
-                            <button onClick={resetForm} className="text-xs font-bold text-neutral-500 hover:text-neutral-800 dark:hover:text-white underline">Cancel Edit</button>
-                        )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        {/* Owner Selection for Married Joint */}
                         {isMarriedJoint && (
                             <div className="col-span-2 bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-xl border border-border-light dark:border-neutral-700 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                                 <span className="text-sm font-bold text-neutral-500 uppercase tracking-wide">Income Earner:</span>
@@ -233,7 +248,7 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                                         onClick={() => setForm({...form, owner: 'primary'})}
                                         className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${form.owner === 'primary' ? 'bg-white dark:bg-neutral-700 shadow-sm border border-neutral-200 dark:border-neutral-600 text-primary dark:text-white' : 'text-neutral-500 hover:bg-white/50'}`}
                                     >
-                                        {taxPayer?.firstName || 'Taxpayer'} (You)
+                                        {taxPayer?.firstName || 'Taxpayer'}
                                     </button>
                                     <button 
                                         onClick={() => setForm({...form, owner: 'spouse'})}
@@ -254,7 +269,6 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
 
                         {activeTab === 'W-2' && (
                             <>
-                                {/* Main Boxes */}
                                 <div className="col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4 bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-lg border border-border-light dark:border-neutral-700">
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-neutral-500">Box 1 Wages</label>
@@ -274,12 +288,11 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                                     </div>
                                 </div>
 
-                                {/* Box 12 & Benefits */}
                                 <div className="col-span-2 bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-lg border border-border-light dark:border-neutral-700">
-                                    <h4 className="text-sm font-bold mb-3 flex items-center gap-2 select-none" onClick={() => setShowReconciliation(!showReconciliation)}>
+                                    <h4 className="text-sm font-bold mb-3 flex items-center gap-2 select-none cursor-pointer" onClick={() => setShowReconciliation(!showReconciliation)}>
                                         <span className="material-symbols-outlined text-[18px]">receipt_long</span>
                                         Benefits & Deductions (Box 12) 
-                                        <span className="text-xs text-neutral-500 font-normal cursor-pointer hover:underline">(Show Reconciliation)</span>
+                                        <span className="text-xs text-neutral-500 font-normal hover:underline">{showReconciliation ? 'Hide' : 'Show'} Details</span>
                                     </h4>
                                     
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -288,38 +301,24 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                                             <input type="number" value={form.details?.w2_box12_code_d_401k || ''} onChange={e => setForm(f => ({...f, details: {...f.details, w2_box12_code_d_401k: parseFloat(e.target.value)}}))} className="w-full p-2 rounded border dark:bg-neutral-900 dark:border-neutral-700" placeholder="Reduces Box 1" />
                                         </div>
                                         <div className="space-y-1">
-                                            <label className="text-xs font-bold text-neutral-500">W - HSA (Employer+Emp)</label>
+                                            <label className="text-xs font-bold text-neutral-500">W - HSA</label>
                                             <input type="number" value={form.details?.w2_box12_code_w_hsa || ''} onChange={e => setForm(f => ({...f, details: {...f.details, w2_box12_code_w_hsa: parseFloat(e.target.value)}}))} className="w-full p-2 rounded border dark:bg-neutral-900 dark:border-neutral-700" placeholder="Reduces 1, 3, 5" />
                                         </div>
                                         <div className="space-y-1">
                                             <label className="text-xs font-bold text-neutral-500">Box 10 Dep. Care</label>
                                             <input type="number" value={form.details?.w2_box10_dependent_care || ''} onChange={e => setForm(f => ({...f, details: {...f.details, w2_box10_dependent_care: parseFloat(e.target.value)}}))} className="w-full p-2 rounded border dark:bg-neutral-900 dark:border-neutral-700" />
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-neutral-500">C - Group Term Life</label>
-                                            <input type="number" value={form.details?.w2_box12_code_c_group_term_life || ''} onChange={e => setForm(f => ({...f, details: {...f.details, w2_box12_code_c_group_term_life: parseFloat(e.target.value)}}))} className="w-full p-2 rounded border dark:bg-neutral-900 dark:border-neutral-700" placeholder="Imputed Income" />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-neutral-500">Health Ins (Pre-Tax)</label>
-                                            <input type="number" value={form.details?.w2_health_insurance_pretax || ''} onChange={e => setForm(f => ({...f, details: {...f.details, w2_health_insurance_pretax: parseFloat(e.target.value)}}))} className="w-full p-2 rounded border dark:bg-neutral-900 dark:border-neutral-700" placeholder="Not on W-2" />
-                                        </div>
-                                        <div className="flex flex-col justify-end">
-                                            <label className="flex items-center gap-2 text-xs mb-2">
-                                                <input type="checkbox" checked={form.details?.w2_retirement_plan_active || false} onChange={e => setForm(f => ({...f, details: {...f.details, w2_retirement_plan_active: e.target.checked}}))} /> 
-                                                Box 13 Ret. Plan Active
-                                            </label>
-                                        </div>
                                     </div>
                                     
                                     {showReconciliation && (
-                                        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-100 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-200">
+                                        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-100 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-200 animate-in fade-in">
                                             <p className="font-bold mb-1">Wage Reconciliation Helper</p>
                                             <div className="flex justify-between">
                                                 <span>Box 1 + 401k + Health:</span>
                                                 <span>${((form.amount || 0) + (form.details?.w2_box12_code_d_401k || 0) + (form.details?.w2_health_insurance_pretax || 0)).toLocaleString()}</span>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span>Should approx Box 3/5 (if no cap):</span>
+                                                <span>Should approx Box 3/5:</span>
                                                 <span className="font-bold">${inferredBox3.toLocaleString()}</span>
                                             </div>
                                         </div>
@@ -329,7 +328,7 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                         )}
 
                         {activeTab === 'Business' && (
-                            <>
+                             <>
                                 <div className="space-y-2">
                                     <label className="text-sm font-semibold flex items-center">Gross Receipts</label>
                                     <input type="number" value={form.amount || ''} onChange={e => setForm({...form, amount: parseFloat(e.target.value)})} className="w-full rounded-lg bg-background-light dark:bg-neutral-800 border border-border-light dark:border-neutral-700 px-4 py-3 outline-none" />
@@ -339,7 +338,6 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                                     <input type="number" value={form.details?.business_expense_total || ''} onChange={e => setForm(f => ({...f, details: {...f.details, business_expense_total: parseFloat(e.target.value)}}))} className="w-full rounded-lg bg-background-light dark:bg-neutral-800 border border-border-light dark:border-neutral-700 px-4 py-3 outline-none" />
                                 </div>
                                 
-                                {/* Home Office & Vehicle */}
                                 <div className="col-span-2 grid grid-cols-2 gap-6 bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-lg">
                                     <div>
                                         <h4 className="text-xs font-bold uppercase mb-2">Home Office</h4>
@@ -356,17 +354,6 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                                         </div>
                                     </div>
                                 </div>
-
-                                <div className="col-span-2 grid grid-cols-2 gap-4 bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
-                                    <label className="flex items-center gap-2 text-sm">
-                                        <input type="checkbox" checked={form.details?.qbi_sstb || false} onChange={e => setForm(f => ({...f, details: {...f.details, qbi_sstb: e.target.checked}}))} /> 
-                                        SSTB (Service Business)
-                                    </label>
-                                    <div className="space-y-1">
-                                        <label className="text-xs font-bold">W-2 Wages Paid <HelpTooltip text="Wages YOU paid to employees." /></label>
-                                        <input type="number" value={form.details?.qbi_w2_wages_paid || ''} placeholder="For QBI Limit" onChange={e => setForm(f => ({...f, details: {...f.details, qbi_w2_wages_paid: parseFloat(e.target.value)}}))} className="w-full p-1 rounded text-sm" />
-                                    </div>
-                                </div>
                             </>
                         )}
 
@@ -379,7 +366,6 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                                         value={form.type}
                                         onChange={e => {
                                             const val = e.target.value;
-                                            // Mapping logic simplified for UI
                                             if (val.includes('1099')) setForm(f => ({...f, type: val as any}));
                                             if (val === 'stock') setForm(f => ({...f, type: 'stock'}));
                                         }}
@@ -405,13 +391,7 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                                         </div>
                                     </div>
                                 )}
-                                {form.type === '1099_div' && (
-                                    <div className="col-span-2 flex gap-4">
-                                        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.details?.dividend_qualified || false} onChange={e => setForm(f => ({...f, details: {...f.details, dividend_qualified: e.target.checked}}))} /> Qualified Div</label>
-                                        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.details?.reit_dividend || false} onChange={e => setForm(f => ({...f, details: {...f.details, reit_dividend: e.target.checked}}))} /> REIT (Sec 199A)</label>
-                                    </div>
-                                )}
-                             </>
+                            </>
                         )}
 
                         {activeTab === 'Rental' && (
@@ -436,16 +416,6 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                                             <option value="commercial">Commercial</option>
                                             <option value="short_term">Short Term</option>
                                         </select>
-                                    </div>
-                                    <div className="col-span-3 flex gap-4 pt-2">
-                                        <label className="flex items-center gap-2 text-sm">
-                                            <input type="checkbox" checked={form.details?.rental_active_participation || false} onChange={e => setForm(f => ({...f, details: {...f.details, rental_active_participation: e.target.checked}}))} /> 
-                                            Active Part.
-                                        </label>
-                                        <label className="flex items-center gap-2 text-sm">
-                                            <input type="checkbox" checked={form.details?.rental_real_estate_pro || false} onChange={e => setForm(f => ({...f, details: {...f.details, rental_real_estate_pro: e.target.checked}}))} /> 
-                                            Real Estate Pro
-                                        </label>
                                     </div>
                                 </div>
                             </>

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { GoogleGenAI } from "@google/genai";
-import { Paystub, PaystubEarning, PaystubTax, PaystubDeduction, IncomeItem } from '../types';
+import { Paystub, IncomeItem } from '../types';
 import { mapPaystubToIncomeItem } from '../utils/paystubMapper';
 
 interface PaystubIngestionModalProps {
@@ -52,7 +52,7 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
     });
 
     // Dynamic Recalculation
-    useEffect(() => {
+    React.useEffect(() => {
         const grossCurr = stub.earnings.reduce((sum, e) => sum + (e.amountCurrent || 0), 0);
         const grossYTD = stub.earnings.reduce((sum, e) => sum + (e.amountYTD || 0), 0);
         const taxCurr = stub.taxes.reduce((sum, t) => sum + (t.amountCurrent || 0), 0);
@@ -78,6 +78,7 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
     const processWithGemini = async (file: File) => {
         try {
             setAiState('uploading');
+            setErrorMsg('');
             
             // Convert file to base64
             const base64Data = await new Promise<string>((resolve, reject) => {
@@ -171,7 +172,7 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
         } catch (err) {
             console.error(err);
             setAiState('error');
-            setErrorMsg("Failed to process paystub. Please try again or enter manually.");
+            setErrorMsg("Failed to process paystub. This may be due to browser limitations or API key issues.");
         }
     };
 
@@ -217,7 +218,9 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
                             <button 
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={aiState === 'uploading' || aiState === 'processing'}
-                                className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold flex flex-col items-center gap-1 shadow-lg transition-all"
+                                className={`w-full py-3 text-white rounded-xl font-bold flex flex-col items-center gap-1 shadow-lg transition-all ${
+                                    aiState === 'processing' ? 'bg-neutral-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
+                                }`}
                             >
                                 {aiState === 'uploading' || aiState === 'processing' ? (
                                     <>

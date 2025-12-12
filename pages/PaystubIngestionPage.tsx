@@ -1,4 +1,3 @@
-import React from 'react';
-// This component is deprecated and replaced by PaystubIngestionModal.
-const PaystubIngestionPage = () => <div />;
+// Deprecated. Moved to PaystubIngestionModal.
+const PaystubIngestionPage = () => null;
 export default PaystubIngestionPage;

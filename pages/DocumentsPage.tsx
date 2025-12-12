@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { IncomeItem, DeductionItem } from '../types';
 
 interface DocumentsPageProps {
@@ -7,7 +8,8 @@ interface DocumentsPageProps {
 }
 
 const DocumentsPage: React.FC<DocumentsPageProps> = ({ incomes, deductions }) => {
-    
+    const navigate = useNavigate();
+
     // Dynamically generate the document list based on entered data
     const documents = useMemo(() => {
         const docs: any[] = [];
@@ -48,7 +50,9 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ incomes, deductions }) =>
                     : (isComplete ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'),
                 size: isAiVerified ? '1.2 MB' : '-',
                 icon,
-                iconColor: color
+                iconColor: color,
+                targetPath: '/income',
+                targetId: inc.id
             });
         });
 
@@ -80,7 +84,9 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ incomes, deductions }) =>
                 statusColor: ded.amount > 0 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
                 size: '-',
                 icon,
-                iconColor: color
+                iconColor: color,
+                targetPath: '/deductions',
+                targetId: ded.id
             });
         });
 
@@ -94,8 +100,12 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ incomes, deductions }) =>
         storageUsed: (documents.filter(d => d.status === 'AI Verified').length * 1.2).toFixed(1)
     };
 
+    const handleAction = (doc: any) => {
+        navigate(doc.targetPath, { state: { editId: doc.targetId } });
+    };
+
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-end">
                 <div>
                     <h1 className="text-3xl font-bold">Document Portal</h1>
@@ -198,8 +208,11 @@ const DocumentsPage: React.FC<DocumentsPageProps> = ({ incomes, deductions }) =>
                                              </td>
                                              <td className="p-4 text-neutral-600 dark:text-neutral-400">{row.size}</td>
                                              <td className="p-4 text-right">
-                                                 <button className="text-neutral-400 hover:text-primary dark:hover:text-white transition-colors">
-                                                     <span className="material-symbols-outlined">more_vert</span>
+                                                 <button 
+                                                    onClick={() => handleAction(row)}
+                                                    className="flex items-center gap-1 text-xs font-bold text-primary dark:text-white hover:underline"
+                                                 >
+                                                     View Entry <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
                                                  </button>
                                              </td>
                                          </tr>
