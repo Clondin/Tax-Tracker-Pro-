@@ -1,0 +1,5 @@
+{
+  "name": "TaxTracker Pro",
+  "description": "A comprehensive tax filing application featuring a step-by-step wizard, income tracking, deduction management, and document organization.",
+  "requestFramePermissions": []
+}
