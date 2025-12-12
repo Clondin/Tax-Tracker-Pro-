@@ -90,7 +90,12 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
 
             setAiState('processing');
 
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+            if (!apiKey) {
+                throw new Error('Missing VITE_GEMINI_API_KEY environment variable');
+            }
+
+            const ai = new GoogleGenAI({ apiKey });
             
             const prompt = `
                 Analyze this paystub image and extract payroll data into a JSON structure matching this schema:
