@@ -40,27 +40,33 @@ const App: React.FC = () => {
 
     return (
         <Router>
-            <Layout theme={theme} toggleTheme={toggleTheme}>
+            <Layout
+                theme={theme}
+                toggleTheme={toggleTheme}
+                incomes={incomes}
+                taxResult={taxResult}
+                taxPayer={taxPayer}
+            >
                 <Routes>
-                    <Route 
-                        path="/" 
-                        element={<SetupPage setTaxPayer={setTaxPayer} />} 
+                    <Route
+                        path="/"
+                        element={<SetupPage setTaxPayer={setTaxPayer} />}
                     />
-                    <Route 
-                        path="/income" 
-                        element={<IncomePage taxPayer={taxPayer} incomes={incomes} setIncomes={setIncomes} taxResult={taxResult} />} 
+                    <Route
+                        path="/income"
+                        element={<IncomePage taxPayer={taxPayer} incomes={incomes} setIncomes={setIncomes} taxResult={taxResult} />}
                     />
-                    <Route 
-                        path="/deductions" 
-                        element={<DeductionsPage deductions={deductions} setDeductions={setDeductions} taxResult={taxResult} />} 
+                    <Route
+                        path="/deductions"
+                        element={<DeductionsPage deductions={deductions} setDeductions={setDeductions} taxResult={taxResult} />}
                     />
-                    <Route 
-                        path="/summary" 
-                        element={<SummaryPage taxResult={taxResult} />} 
+                    <Route
+                        path="/summary"
+                        element={<SummaryPage taxResult={taxResult} />}
                     />
-                    <Route 
-                        path="/documents" 
-                        element={<DocumentsPage incomes={incomes} deductions={deductions} />} 
+                    <Route
+                        path="/documents"
+                        element={<DocumentsPage incomes={incomes} deductions={deductions} />}
                     />
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>

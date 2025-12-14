@@ -1,13 +1,18 @@
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Chatbot } from './Chatbot';
+import { IncomeItem, TaxResult, TaxPayer } from '../types';
 
 interface LayoutProps {
     children: React.ReactNode;
     theme: 'light' | 'dark';
     toggleTheme: () => void;
+    incomes?: IncomeItem[];
+    taxResult?: TaxResult | null;
+    taxPayer?: TaxPayer;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }) => {
+const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes = [], taxResult = null, taxPayer }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -96,6 +101,8 @@ const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme }) => {
             <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {children}
             </main>
+
+            <Chatbot incomes={incomes} taxResult={taxResult} taxPayer={taxPayer} />
         </div>
     );
 };
