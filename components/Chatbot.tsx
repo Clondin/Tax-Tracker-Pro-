@@ -106,7 +106,18 @@ export const Chatbot: React.FC<ChatbotProps> = ({ incomes, taxResult, taxPayer }
                 })
             });
 
-            if (!response.ok) throw new Error('Failed to get response');
+            if (!response.ok) {
+                let errorDetails = `Error ${response.status}: ${response.statusText}`;
+                try {
+                    const data = await response.json();
+                    if (data.error) errorDetails = data.error;
+                    else if (data.content) errorDetails = data.content;
+                } catch (e) {
+                    const text = await response.text();
+                    if (text) errorDetails += ` - ${text.substring(0, 100)}`;
+                }
+                throw new Error(errorDetails);
+            }
 
             const data = await response.json();
             setMessages(prev => [...prev, data]);
