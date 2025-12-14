@@ -2,13 +2,16 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const distPath = path.resolve(__dirname, 'dist');
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyCCn3mN9tgF4pHh9su5kbalA2ftu21HLGQ';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 if (!GEMINI_API_KEY) {
   throw new Error('Gemini API key is not configured. Set GEMINI_API_KEY.');
