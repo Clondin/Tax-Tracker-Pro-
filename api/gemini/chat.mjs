@@ -30,7 +30,7 @@ export default async function handler(req, res) {
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-002' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
 
         const systemPrompt = `You are TaxTracker AI, a helpful tax assistant.
 User's data: ${JSON.stringify(context || {})}
