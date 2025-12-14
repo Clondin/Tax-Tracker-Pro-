@@ -37,36 +37,47 @@ export default async function handler(req, res) {
         const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
         const prompt = `You are a payroll document analyzer. Carefully examine this paystub image and extract ALL visible payroll information.
 
-Look for and extract:
-1. EMPLOYER NAME - The company name at the top
-2. PAY DATE - The check date or pay date
-3. PAY FREQUENCY - weekly, biweekly, semimonthly, or monthly
-4. STATE - The state of employment (2 letter code like CA, NY, TX)
-5. EARNINGS - All earnings items (Regular, Overtime, Bonus, etc.) with their current period and YTD amounts
-6. TAXES - All tax withholdings (Federal, Social Security, Medicare, State, etc.) with current and YTD amounts
-7. DEDUCTIONS - All deductions (401k, Health Insurance, HSA, etc.) with current and YTD amounts
+CRITICAL - Extract these fields accurately:
+1. EMPLOYER NAME - The company name (look at the top/header of the paystub)
+2. PAY DATE - The exact date on the check or "Pay Date" field. Format as YYYY-MM-DD (e.g., 2024-12-15)
+3. PAY PERIOD START/END - Look for "Pay Period" dates to determine frequency
+4. PAY FREQUENCY - Determine from the pay period length:
+   - "weekly" = 7 days between pay periods
+   - "biweekly" = 14 days between pay periods  
+   - "semimonthly" = paid twice a month (1st & 15th, or 15th & 30th)
+   - "monthly" = paid once a month
+5. STATE - The state of employment (2 letter code like CA, NY, TX) - look in the employer address
+6. EARNINGS - All earnings items with EXACT dollar amounts
+7. TAXES - All tax withholdings with EXACT dollar amounts (Federal, SS, Medicare, State, Local)
+8. DEDUCTIONS - All deductions with EXACT dollar amounts (401k, Health, Dental, Vision, HSA, etc.)
 
 Return a JSON object with this exact structure:
 {
-    "employerName": "Company Name Here",
-    "payDate": "2024-01-15",
+    "employerName": "Actual Company Name",
+    "payDate": "2024-12-15",
     "payFrequency": "biweekly",
     "stateOfEmployment": "CA",
     "earnings": [
-        { "description": "Regular Pay", "amountCurrent": 2500.00, "amountYTD": 5000.00, "type": "regular" }
+        { "description": "Regular Pay", "amountCurrent": 2500.00, "amountYTD": 50000.00, "type": "regular" }
     ],
     "taxes": [
-        { "description": "Federal Tax", "amountCurrent": 300.00, "amountYTD": 600.00, "authority": "federal", "type": "fed_withholding" },
-        { "description": "Social Security", "amountCurrent": 155.00, "amountYTD": 310.00, "authority": "federal", "type": "ss" },
-        { "description": "Medicare", "amountCurrent": 36.25, "amountYTD": 72.50, "authority": "federal", "type": "med" }
+        { "description": "Federal Tax", "amountCurrent": 300.00, "amountYTD": 6000.00, "authority": "federal", "type": "fed_withholding" },
+        { "description": "Social Security", "amountCurrent": 155.00, "amountYTD": 3100.00, "authority": "federal", "type": "ss" },
+        { "description": "Medicare", "amountCurrent": 36.25, "amountYTD": 725.00, "authority": "federal", "type": "med" },
+        { "description": "State Tax", "amountCurrent": 100.00, "amountYTD": 2000.00, "authority": "state", "type": "state_withholding" }
     ],
     "deductions": [
-        { "description": "401k", "amountCurrent": 200.00, "amountYTD": 400.00, "type": "pre_tax", "category": "401k" }
+        { "description": "401k", "amountCurrent": 200.00, "amountYTD": 4000.00, "type": "pre_tax", "category": "401k" },
+        { "description": "Health Insurance", "amountCurrent": 150.00, "amountYTD": 3000.00, "type": "pre_tax", "category": "health" }
     ]
 }
 
-IMPORTANT: Extract the ACTUAL numbers from the paystub image. Do not use placeholder values.
-Return ONLY valid JSON, no markdown code blocks.`;
+IMPORTANT RULES:
+- Extract the ACTUAL numbers from the paystub image, not placeholder/example values
+- For payDate, use the actual date shown (format: YYYY-MM-DD)
+- For payFrequency, calculate from the pay period dates if shown
+- If a value is not visible, use 0 for numbers or empty string for text
+- Return ONLY valid JSON, no markdown code blocks`;
 
         const response = await ai.models.generateContent({
             model: 'gemini-2.0-flash',
