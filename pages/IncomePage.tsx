@@ -213,28 +213,9 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                     </div>
                 </div>
                 <div className="space-y-4">
-                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block ml-1">Tax Tips</label>
-                    <GuideTip
-                        title="W-2 vs 1099?"
-                        content="W-2 is for employees (taxes withheld). 1099 is for contractors (you pay taxes). If you have both, add them separately."
-                        icon="help"
-                        variant="highlight"
-                    />
-                    <GuideTip
-                        title="Business Expenses (1099)"
-                        content="If you have 1099-NEC income, you can deduct expenses! Keep receipts for software, home office, and supplies to lower your tax bill."
-                        icon="receipt_long"
-                    />
-                    <GuideTip
-                        title="Crypto & Stock Sales"
-                        content="Sold assets? You only pay tax on the *gain* (profit). Losses can offset gains and up to $3,000 of other income."
-                        icon="trending_up"
-                    />
-                    <GuideTip
-                        title="Don't Forget Interest"
-                        content="Even small amounts of bank interest (1099-INT) over $10 must be reported. Check your banking app for documents."
-                        icon="savings"
-                    />
+                    <div className="space-y-4">
+                        {/* Tips moved to WizardContext */}
+                    </div>
                 </div>
             </div>
 
@@ -374,6 +355,42 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                         <span className="material-symbols-outlined">check</span>
                         {editingId ? 'Save Changes' : 'Add Income'}
                     </button>
+
+                    {/* Contextual Tips */}
+                    <div className="pt-6 border-t border-border-light dark:border-neutral-800">
+                        {activeCategory === 'W-2' && (
+                            <GuideTip
+                                title="W-2 vs 1099?"
+                                content="W-2 is for employees (taxes withheld). If you are a contractor, use the 'Self-Employment' category instead."
+                                icon="help"
+                                variant="highlight"
+                            />
+                        )}
+                        {activeCategory === 'Business' && (
+                            <GuideTip
+                                title="Deduct Your Expenses!"
+                                content="You can deduct software, home office, and supplies. Keep your receipts! Net profit is what gets taxed."
+                                icon="receipt_long"
+                                variant="highlight"
+                            />
+                        )}
+                        {activeCategory === 'Investment' && (
+                            <GuideTip
+                                title="Crypto & Stock Sales"
+                                content="Sold assets? You only pay tax on the *profit*. Losses can offset gains and up to $3,000 of other income."
+                                icon="trending_up"
+                                variant="highlight"
+                            />
+                        )}
+                        {activeCategory === 'Rental' && (
+                            <GuideTip
+                                title="Depreciation is Key"
+                                content="You can deduct the 'wear and tear' of the building value (Depreciation) even if you didn't pay cash this year."
+                                icon="apartment"
+                                variant="highlight"
+                            />
+                        )}
+                    </div>
                 </div>
             </WizardPanel>
 

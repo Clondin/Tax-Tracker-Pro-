@@ -205,27 +205,9 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                 </div>
                 <div className="space-y-4">
                     <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block ml-1">Smart Tips</label>
-                    <GuideTip
-                        title="Standard vs Itemized"
-                        content="The standard deduction for 2025 is $15,000 (Single) or $30,000 (Joint). We'll automatically use whichever gives you a bigger refund."
-                        icon="scale"
-                        variant="highlight"
-                    />
-                    <GuideTip
-                        title="HSA is Triple Tax-Free"
-                        content="HSA contributions reduce your taxable income today AND grow tax-free. It's one of the best deduction vehicles available."
-                        icon="medical_services"
-                    />
-                    <GuideTip
-                        title="SALT Cap ($10k)"
-                        content="State and Local Tax (SALT) deduction is limited to $10,000 per year combined for property and income taxes."
-                        icon="public"
-                    />
-                    <GuideTip
-                        title="Charity Evidence"
-                        content="For cash donations under $250, distinct bank records are enough. Over $250, you need a written acknowledgment from the charity."
-                        icon="volunteer_activism"
-                    />
+                    <div className="space-y-4">
+                        {/* Tips moved to WizardContext */}
+                    </div>
                 </div>
             </div>
 
@@ -327,6 +309,34 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                         <span className="material-symbols-outlined">check</span>
                         {editingId ? 'Save Changes' : 'Add Deduction'}
                     </button>
+
+                    {/* Contextual Tips */}
+                    <div className="pt-6 border-t border-border-light dark:border-neutral-800">
+                        {activeCategory === 'health' && (
+                            <GuideTip
+                                title="HSA is Triple Tax-Free"
+                                content="Contributions reduce taxable income, grow tax-free, and withdrawals for medical expenses are tax-free. Max it out if you can!"
+                                icon="medical_services"
+                                variant="highlight"
+                            />
+                        )}
+                        {activeCategory === 'home' && (
+                            <GuideTip
+                                title="SALT Cap ($10,000)"
+                                content="You can only deduct up to $10,000 combined for State, Local, and Property taxes. Anything above that is lost."
+                                icon="public"
+                                variant="highlight"
+                            />
+                        )}
+                        {activeCategory === 'charity' && (
+                            <GuideTip
+                                title="Paper Trail Required"
+                                content="For donations >$250, bank records aren't enough. You need a letter/receipt from the charity to claim it."
+                                icon="volunteer_activism"
+                                variant="highlight"
+                            />
+                        )}
+                    </div>
                 </div>
             </WizardPanel>
 
