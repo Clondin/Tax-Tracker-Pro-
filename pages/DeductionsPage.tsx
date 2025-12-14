@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { DeductionItem, TaxResult } from '../types';
 import { WizardPanel } from '../components/ui/WizardPanel';
 import { CurrencyInput } from '../components/ui/CurrencyInput';
+import { GuideTip } from '../components/ui/GuideTip';
 import { cn } from '../lib/utils';
 
 interface DeductionsPageProps {
@@ -178,27 +179,42 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
             </div>
 
             {/* Deduction Category Cards */}
-            <div>
-                <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block ml-1">Select Deduction Type</label>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    {DEDUCTION_CATEGORIES.map(cat => (
-                        <motion.button
-                            key={cat.id}
-                            whileHover={{ scale: 1.02, y: -2 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => selectCategory(cat.id)}
-                            className={cn(
-                                "relative group p-5 rounded-2xl border-2 text-left transition-all duration-300",
-                                "bg-white dark:bg-card-dark border-border-light dark:border-border-dark hover:border-neutral-300 dark:hover:border-neutral-600 hover:shadow-xl"
-                            )}
-                        >
-                            <div className={`p-3 rounded-xl inline-block mb-3 transition-colors ${cat.bgColor}`}>
-                                <span className={`material-symbols-outlined text-2xl ${cat.color}`}>{cat.icon}</span>
-                            </div>
-                            <div className="font-bold text-text-main dark:text-white">{cat.label}</div>
-                            <div className="text-xs text-text-muted mt-0.5">{cat.subtitle}</div>
-                        </motion.button>
-                    ))}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2">
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block ml-1">Select Deduction Type</label>
+                    <div className="grid grid-cols-2 gap-4">
+                        {DEDUCTION_CATEGORIES.map(cat => (
+                            <motion.button
+                                key={cat.id}
+                                whileHover={{ scale: 1.02, y: -2 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => selectCategory(cat.id)}
+                                className={cn(
+                                    "relative group p-5 rounded-2xl border-2 text-left transition-all duration-300",
+                                    "bg-white dark:bg-card-dark border-border-light dark:border-border-dark hover:border-neutral-300 dark:hover:border-neutral-600 hover:shadow-xl"
+                                )}
+                            >
+                                <div className={`p-3 rounded-xl inline-block mb-3 transition-colors ${cat.bgColor}`}>
+                                    <span className={`material-symbols-outlined text-2xl ${cat.color}`}>{cat.icon}</span>
+                                </div>
+                                <div className="font-bold text-text-main dark:text-white">{cat.label}</div>
+                                <div className="text-xs text-text-muted mt-0.5">{cat.subtitle}</div>
+                            </motion.button>
+                        ))}
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block ml-1">Smart Tips</label>
+                    <GuideTip
+                        title="Standard vs Itemized"
+                        content="The standard deduction for 2025 is $15,000 (Single) or $30,000 (Joint). We'll automatically use whichever gives you a bigger refund."
+                        icon="scale"
+                    />
+                    <GuideTip
+                        title="HSA is Triple Tax-Free"
+                        content="HSA contributions reduce your taxable income today AND grow tax-free. It's one of the best deduction vehicles available."
+                        icon="medical_services"
+                    />
                 </div>
             </div>
 

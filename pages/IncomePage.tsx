@@ -6,6 +6,7 @@ import { IncomeItem, TaxResult, TaxPayer, Paystub } from '../types';
 import PaystubIngestionModal from '../components/PaystubIngestionModal';
 import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { WizardPanel } from '../components/ui/WizardPanel';
+import { GuideTip } from '../components/ui/GuideTip';
 import { cn } from '../lib/utils';
 
 interface IncomePageProps {
@@ -187,27 +188,42 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
             </div>
 
             {/* Income Type Cards */}
-            <div>
-                <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block ml-1">Select Income Type</label>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    {INCOME_CATEGORIES.map(cat => (
-                        <motion.button
-                            key={cat.id}
-                            whileHover={{ scale: 1.02, y: -2 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => selectCategory(cat.id)}
-                            className={cn(
-                                "relative group p-5 rounded-2xl border-2 text-left transition-all duration-300",
-                                "bg-white dark:bg-card-dark border-border-light dark:border-border-dark hover:border-neutral-300 dark:hover:border-neutral-600 hover:shadow-xl"
-                            )}
-                        >
-                            <div className={`p-3 rounded-xl inline-block mb-3 transition-colors ${cat.bgColor}`}>
-                                <span className={`material-symbols-outlined text-2xl ${cat.color}`}>{cat.icon}</span>
-                            </div>
-                            <div className="font-bold text-text-main dark:text-white">{cat.label}</div>
-                            <div className="text-xs text-text-muted mt-0.5">{cat.subtitle}</div>
-                        </motion.button>
-                    ))}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2">
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block ml-1">Select Income Type</label>
+                    <div className="grid grid-cols-2 gap-4">
+                        {INCOME_CATEGORIES.map(cat => (
+                            <motion.button
+                                key={cat.id}
+                                whileHover={{ scale: 1.02, y: -2 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => selectCategory(cat.id)}
+                                className={cn(
+                                    "relative group p-5 rounded-2xl border-2 text-left transition-all duration-300",
+                                    "bg-white dark:bg-card-dark border-border-light dark:border-border-dark hover:border-neutral-300 dark:hover:border-neutral-600 hover:shadow-xl"
+                                )}
+                            >
+                                <div className={`p-3 rounded-xl inline-block mb-3 transition-colors ${cat.bgColor}`}>
+                                    <span className={`material-symbols-outlined text-2xl ${cat.color}`}>{cat.icon}</span>
+                                </div>
+                                <div className="font-bold text-text-main dark:text-white">{cat.label}</div>
+                                <div className="text-xs text-text-muted mt-0.5">{cat.subtitle}</div>
+                            </motion.button>
+                        ))}
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block ml-1">Tax Tips</label>
+                    <GuideTip
+                        title="W-2 vs 1099?"
+                        content="W-2 is for employees where taxes are withheld. 1099 is for contractors/freelancers where you are responsible for your own taxes."
+                        icon="help"
+                    />
+                    <GuideTip
+                        title="Don't Forget Interest"
+                        content="Even small amounts of bank interest (1099-INT) must be reported. Check your banking app for tax documents."
+                        icon="savings"
+                    />
                 </div>
             </div>
 
@@ -244,7 +260,7 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                             {['primary', 'spouse'].map(owner => (
                                 <button
                                     key={owner}
-                                    onClick={() => setForm({ ...form, owner })}
+                                    onClick={() => setForm({ ...form, owner: owner as 'primary' | 'spouse' })}
                                     className={cn(
                                         "flex-1 py-2.5 rounded-lg text-sm font-bold transition-all",
                                         form.owner === owner
