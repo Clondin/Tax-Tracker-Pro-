@@ -58,24 +58,24 @@ const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes =
             <header className="sticky top-0 z-50 glass shadow-[var(--shadow-sm)]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-neutral-900 to-neutral-700 dark:from-white dark:to-neutral-300 flex items-center justify-center shadow-[var(--shadow-md)] transition-all duration-300 group-hover:shadow-[var(--shadow-lg)] group-hover:scale-105">
-                            <span className="material-symbols-outlined text-white dark:text-neutral-900 text-[20px]">grid_view</span>
+                        <div className="w-8 h-8 rounded-lg bg-neutral-900 dark:bg-white flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
+                            <span className="material-symbols-outlined text-white dark:text-neutral-900 text-[18px]">grid_view</span>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="font-bold text-lg tracking-tight text-neutral-900 dark:text-white leading-none">
-                                TaxTracker
-                            </span>
-                            <span className="text-[10px] font-medium text-neutral-400 dark:text-neutral-500 uppercase tracking-widest">Pro</span>
-                        </div>
+                        <span className="font-bold text-lg tracking-tight text-neutral-900 dark:text-white">
+                            TaxTracker<span className="text-neutral-400 dark:text-neutral-500 font-medium text-sm ml-1">Pro</span>
+                        </span>
                     </div>
 
                     {/* Desktop Nav */}
-                    <nav className="hidden md:flex items-center gap-1 p-1 bg-neutral-100/80 dark:bg-neutral-900/80 rounded-2xl backdrop-blur-sm">
+                    <nav className="hidden md:flex items-center gap-1">
                         {navItems.map((item) => (
                             <button
                                 key={item.path}
                                 onClick={() => navigate(item.path)}
-                                className={`nav-pill ${isActive(item.path) ? 'nav-pill-active' : 'nav-pill-inactive'}`}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(item.path)
+                                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+                                    : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                                    }`}
                             >
                                 <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
                                 <span>{item.label}</span>
@@ -105,7 +105,7 @@ const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes =
                                 {theme === 'light' ? 'dark_mode' : 'light_mode'}
                             </span>
                         </button>
-                        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-[var(--shadow-primary)] ring-2 ring-white dark:ring-neutral-900">
+                        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
                             {taxPayer?.firstName?.[0] || 'J'}{taxPayer?.lastName?.[0] || 'D'}
                         </div>
                     </div>
