@@ -1,13 +1,26 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
 export default async function handler(req, res) {
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
+        const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+        if (!GEMINI_API_KEY) {
+            return res.status(500).json({ error: 'GEMINI_API_KEY environment variable not set' });
+        }
+
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
         const { messages, context } = req.body;
 
         if (!messages || !Array.isArray(messages)) {
@@ -55,6 +68,6 @@ Rules:
 
     } catch (error) {
         console.error('Error generating chat response:', error);
-        return res.status(500).json({ error: 'Failed to generate response' });
+        return res.status(500).json({ error: 'Failed to generate response', details: error.message });
     }
 }
