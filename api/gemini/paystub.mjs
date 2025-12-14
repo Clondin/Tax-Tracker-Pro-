@@ -35,25 +35,38 @@ export default async function handler(req, res) {
         }
 
         const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-        const prompt = `
-      Analyze this paystub image and extract payroll data into a JSON structure matching this schema:
-      {
-          "employerName": "string",
-          "payDate": "YYYY-MM-DD",
-          "payFrequency": "weekly" | "biweekly" | "semimonthly" | "monthly",
-          "stateOfEmployment": "string (2 letter code)",
-          "earnings": [
-              { "description": "string", "amountCurrent": number, "amountYTD": number, "type": "regular" | "overtime" | "bonus" | "other" }
-          ],
-          "taxes": [
-              { "description": "string", "amountCurrent": number, "amountYTD": number, "authority": "federal" | "state", "type": "fed_withholding" | "ss" | "med" | "state_withholding" | "sdi" | "other" }
-          ],
-          "deductions": [
-              { "description": "string", "amountCurrent": number, "amountYTD": number, "type": "pre_tax" | "after_tax", "category": "health" | "401k" | "hsa" | "other" }
-          ]
-      }
-      Return ONLY valid JSON. If values are missing, use 0 or empty string.
-    `;
+        const prompt = `You are a payroll document analyzer. Carefully examine this paystub image and extract ALL visible payroll information.
+
+Look for and extract:
+1. EMPLOYER NAME - The company name at the top
+2. PAY DATE - The check date or pay date
+3. PAY FREQUENCY - weekly, biweekly, semimonthly, or monthly
+4. STATE - The state of employment (2 letter code like CA, NY, TX)
+5. EARNINGS - All earnings items (Regular, Overtime, Bonus, etc.) with their current period and YTD amounts
+6. TAXES - All tax withholdings (Federal, Social Security, Medicare, State, etc.) with current and YTD amounts
+7. DEDUCTIONS - All deductions (401k, Health Insurance, HSA, etc.) with current and YTD amounts
+
+Return a JSON object with this exact structure:
+{
+    "employerName": "Company Name Here",
+    "payDate": "2024-01-15",
+    "payFrequency": "biweekly",
+    "stateOfEmployment": "CA",
+    "earnings": [
+        { "description": "Regular Pay", "amountCurrent": 2500.00, "amountYTD": 5000.00, "type": "regular" }
+    ],
+    "taxes": [
+        { "description": "Federal Tax", "amountCurrent": 300.00, "amountYTD": 600.00, "authority": "federal", "type": "fed_withholding" },
+        { "description": "Social Security", "amountCurrent": 155.00, "amountYTD": 310.00, "authority": "federal", "type": "ss" },
+        { "description": "Medicare", "amountCurrent": 36.25, "amountYTD": 72.50, "authority": "federal", "type": "med" }
+    ],
+    "deductions": [
+        { "description": "401k", "amountCurrent": 200.00, "amountYTD": 400.00, "type": "pre_tax", "category": "401k" }
+    ]
+}
+
+IMPORTANT: Extract the ACTUAL numbers from the paystub image. Do not use placeholder values.
+Return ONLY valid JSON, no markdown code blocks.`;
 
         const response = await ai.models.generateContent({
             model: 'gemini-2.0-flash',
