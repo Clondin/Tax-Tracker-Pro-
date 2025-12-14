@@ -58,11 +58,11 @@ const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes =
             <header className="sticky top-0 z-50 bg-white/80 dark:bg-card-dark/80 backdrop-blur-md border-b border-border-light dark:border-border-dark shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
-                        <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 p-2.5 rounded-xl shadow-lg shadow-purple-500/25 group-hover:shadow-purple-500/40 transition-all duration-300">
-                            <span className="material-symbols-outlined text-white text-xl">monitoring</span>
+                        <div className="w-8 h-8 rounded-lg bg-neutral-900 dark:bg-white flex items-center justify-center transition-transform group-hover:scale-105">
+                            <span className="material-symbols-outlined text-white dark:text-neutral-900 text-[20px]">grid_view</span>
                         </div>
-                        <span className="font-bold text-xl tracking-tight">
-                            TaxTracker <span className="gradient-text">Pro</span>
+                        <span className="font-semibold text-lg tracking-tight text-neutral-900 dark:text-white">
+                            TaxTracker
                         </span>
                     </div>
 
@@ -72,12 +72,12 @@ const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes =
                             <button
                                 key={item.path}
                                 onClick={() => navigate(item.path)}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(item.path)
-                                    ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-light'
-                                    : 'text-text-muted hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800'
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${isActive(item.path)
+                                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+                                    : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800'
                                     }`}
                             >
-                                <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                                <span className="material-symbols-outlined text-[18px] opacity-70">{item.icon}</span>
                                 <span>{item.label}</span>
                             </button>
                         ))}
