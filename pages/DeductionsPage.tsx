@@ -134,76 +134,184 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
 
     return (
         <div className="flex flex-col gap-8 h-full animate-in fade-in duration-500 pb-20">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2.5 bg-purple-500/10 rounded-xl">
-                            <span className="material-symbols-outlined text-purple-500 text-2xl">receipt_long</span>
+            {/* Hero Header */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 p-8 text-white">
+                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 bg-purple-400/20 rounded-full blur-2xl"></div>
+
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <div className="flex items-center gap-3 mb-2">
+                            <span className="material-symbols-outlined text-3xl">savings</span>
+                            <h1 className="text-3xl font-bold">Deductions & Credits</h1>
                         </div>
-                        <h1 className="text-3xl font-bold text-text-main dark:text-white">Deductions & Credits</h1>
+                        <p className="text-purple-200 max-w-md">Track your deductions to maximize your refund. We'll tell you if itemizing beats the standard deduction.</p>
                     </div>
-                    <p className="text-text-muted ml-1">Reduce your taxable income with eligible deductions</p>
-                </div>
 
-                <div className="flex gap-4">
-                    <div className="glass-card rounded-xl px-5 py-3 border-l-4 border-l-purple-500">
-                        <div className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wide">Total Deductions</div>
-                        <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">${totalDeductions.toLocaleString()}</div>
-                    </div>
-                    <div className="glass-card rounded-xl px-5 py-3 border-l-4 border-l-neutral-400 hidden sm:block">
-                        <div className="text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">Standard Ded. (Target)</div>
-                        <div className="text-2xl font-bold text-neutral-600 dark:text-neutral-300">$15,750</div>
+                    {/* Progress Visualization */}
+                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-5 min-w-[280px]">
+                        <div className="flex justify-between text-sm mb-2">
+                            <span className="text-purple-200">Your Deductions</span>
+                            <span className="font-bold">${totalDeductions.toLocaleString()}</span>
+                        </div>
+                        <div className="h-3 bg-white/20 rounded-full overflow-hidden mb-2">
+                            <motion.div
+                                className="h-full bg-gradient-to-r from-emerald-400 to-emerald-300 rounded-full"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${Math.min((totalDeductions / 15750) * 100, 100)}%` }}
+                                transition={{ duration: 0.8, ease: "easeOut" }}
+                            />
+                        </div>
+                        <div className="flex justify-between text-xs">
+                            <span className={totalDeductions >= 15750 ? "text-emerald-300 font-bold" : "text-purple-300"}>
+                                {totalDeductions >= 15750 ? "✓ Itemize!" : `$${(15750 - totalDeductions).toLocaleString()} to beat standard`}
+                            </span>
+                            <span className="text-purple-300">$15,750</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* AI Receipt Scanner - Compact Inline */}
-            <div
-                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={handleFileDrop}
-                className={cn(
-                    "border border-dashed rounded-xl p-4 transition-all cursor-pointer flex items-center gap-4",
-                    isDragging ? "border-primary bg-primary/5" : "border-neutral-300 dark:border-neutral-700 hover:border-primary/50",
-                    isScanning && "animate-pulse"
-                )}
-            >
-                <div className={cn("p-2 rounded-lg", isDragging ? "bg-primary text-white" : "bg-neutral-100 dark:bg-neutral-800")}>
-                    <span className="material-symbols-outlined text-xl">{isScanning ? 'hourglass_top' : 'document_scanner'}</span>
-                </div>
-                <div className="flex-1">
-                    <span className="font-semibold text-sm text-text-main dark:text-white">
-                        {isScanning ? 'Scanning...' : 'AI Receipt Scanner'}
-                    </span>
-                    <span className="text-xs text-text-muted ml-2">Drop receipt image</span>
-                </div>
-            </div>
+            {/* Empty State or Content */}
+            {deductions.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center py-16">
+                    <div className="w-24 h-24 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-6">
+                        <span className="material-symbols-outlined text-5xl text-purple-500">receipt_long</span>
+                    </div>
+                    <h2 className="text-2xl font-bold text-text-main dark:text-white mb-2">No deductions yet</h2>
+                    <p className="text-text-muted text-center max-w-md mb-8">
+                        Add your medical expenses, mortgage interest, charitable donations, and more to reduce your taxable income.
+                    </p>
 
-            {/* Deduction Category Cards - Full Width */}
-            <div>
-                <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block ml-1">Select Deduction Type</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {DEDUCTION_CATEGORIES.map(cat => (
-                        <motion.button
-                            key={cat.id}
-                            whileHover={{ scale: 1.02, y: -2 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => selectCategory(cat.id)}
-                            className={cn(
-                                "relative group p-5 rounded-2xl border-2 text-left transition-all duration-300",
-                                "bg-white dark:bg-card-dark border-border-light dark:border-border-dark hover:border-neutral-300 dark:hover:border-neutral-600 hover:shadow-xl"
-                            )}
-                        >
-                            <div className={`p-3 rounded-xl inline-block mb-3 transition-colors ${cat.bgColor}`}>
-                                <span className={`material-symbols-outlined text-2xl ${cat.color}`}>{cat.icon}</span>
-                            </div>
-                            <div className="font-bold text-text-main dark:text-white">{cat.label}</div>
-                            <div className="text-xs text-text-muted mt-0.5">{cat.subtitle}</div>
-                        </motion.button>
-                    ))}
+                    {/* Quick Start Cards */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-3xl">
+                        {DEDUCTION_CATEGORIES.map(cat => (
+                            <motion.button
+                                key={cat.id}
+                                whileHover={{ scale: 1.03, y: -4 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => selectCategory(cat.id)}
+                                className={cn(
+                                    "p-5 rounded-2xl border-2 text-left transition-all duration-300",
+                                    "bg-white dark:bg-card-dark border-border-light dark:border-border-dark",
+                                    "hover:shadow-xl hover:border-purple-300 dark:hover:border-purple-700"
+                                )}
+                            >
+                                <div className={`p-3 rounded-xl inline-block mb-3 ${cat.bgColor}`}>
+                                    <span className={`material-symbols-outlined text-2xl ${cat.color}`}>{cat.icon}</span>
+                                </div>
+                                <div className="font-bold text-text-main dark:text-white">{cat.label}</div>
+                                <div className="text-xs text-text-muted mt-0.5">{cat.subtitle}</div>
+                            </motion.button>
+                        ))}
+                    </div>
+
+                    {/* AI Scanner Callout */}
+                    <div
+                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                        onDragLeave={() => setIsDragging(false)}
+                        onDrop={handleFileDrop}
+                        className={cn(
+                            "mt-8 w-full max-w-md border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all",
+                            isDragging ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20" : "border-neutral-300 dark:border-neutral-700 hover:border-purple-400",
+                            isScanning && "animate-pulse"
+                        )}
+                    >
+                        <span className="material-symbols-outlined text-3xl text-purple-500 mb-2">{isScanning ? 'hourglass_top' : 'document_scanner'}</span>
+                        <div className="font-semibold text-text-main dark:text-white">
+                            {isScanning ? 'Scanning receipt...' : 'Drop a receipt to auto-add'}
+                        </div>
+                        <div className="text-xs text-text-muted mt-1">AI extracts vendor, amount & category</div>
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <>
+                    {/* AI Scanner - Compact */}
+                    <div
+                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                        onDragLeave={() => setIsDragging(false)}
+                        onDrop={handleFileDrop}
+                        className={cn(
+                            "border border-dashed rounded-xl p-4 flex items-center gap-4 cursor-pointer transition-all",
+                            isDragging ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20" : "border-neutral-300 dark:border-neutral-700 hover:border-purple-400",
+                            isScanning && "animate-pulse"
+                        )}
+                    >
+                        <div className={cn("p-2 rounded-lg", isDragging ? "bg-purple-500 text-white" : "bg-neutral-100 dark:bg-neutral-800")}>
+                            <span className="material-symbols-outlined text-xl">{isScanning ? 'hourglass_top' : 'document_scanner'}</span>
+                        </div>
+                        <div className="flex-1">
+                            <span className="font-semibold text-sm text-text-main dark:text-white">{isScanning ? 'Scanning...' : 'AI Receipt Scanner'}</span>
+                            <span className="text-xs text-text-muted ml-2">Drop image to auto-add</span>
+                        </div>
+                    </div>
+
+                    {/* Category Cards */}
+                    <div>
+                        <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block">Add New Deduction</label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {DEDUCTION_CATEGORIES.map(cat => (
+                                <motion.button
+                                    key={cat.id}
+                                    whileHover={{ scale: 1.02, y: -2 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => selectCategory(cat.id)}
+                                    className={cn(
+                                        "p-4 rounded-xl border text-left transition-all",
+                                        "bg-white dark:bg-card-dark border-border-light dark:border-border-dark hover:border-purple-300 dark:hover:border-purple-700 hover:shadow-lg"
+                                    )}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-lg ${cat.bgColor}`}>
+                                            <span className={`material-symbols-outlined text-lg ${cat.color}`}>{cat.icon}</span>
+                                        </div>
+                                        <div>
+                                            <div className="font-semibold text-sm text-text-main dark:text-white">{cat.label}</div>
+                                            <div className="text-xs text-text-muted">{cat.subtitle}</div>
+                                        </div>
+                                    </div>
+                                </motion.button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Existing Deductions List */}
+                    <div>
+                        <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block">Your Deductions ({deductions.length})</label>
+                        <div className="space-y-3">
+                            {deductions.map((item, idx) => {
+                                const style = getCategoryStyle(getCategoryForItem(item));
+                                return (
+                                    <motion.div
+                                        key={item.id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: idx * 0.05 }}
+                                        className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-card-dark border border-border-light dark:border-border-dark hover:shadow-md transition-all group"
+                                    >
+                                        <div className={`p-2 rounded-lg ${style?.bgColor}`}>
+                                            <span className={`material-symbols-outlined ${style?.color}`}>{style?.icon}</span>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-semibold text-text-main dark:text-white truncate">{item.description}</div>
+                                            <div className="text-xs text-text-muted">{style?.label}</div>
+                                        </div>
+                                        <div className="text-lg font-bold text-text-main dark:text-white">${item.amount.toLocaleString()}</div>
+                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => handleEdit(item)} className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors">
+                                                <span className="material-symbols-outlined text-lg text-text-muted">edit</span>
+                                            </button>
+                                            <button onClick={() => handleDelete(item.id)} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
+                                                <span className="material-symbols-outlined text-lg text-red-500">delete</span>
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </>
+            )}
 
             {/* Wizard Panel */}
             <WizardPanel
