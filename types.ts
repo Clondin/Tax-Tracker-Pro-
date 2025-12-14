@@ -8,10 +8,10 @@ export interface Dependent {
     monthsLivedWith: number;
     isStudent: boolean;
     isDisabled: boolean;
-    hasItin: boolean; 
-    isCtcQualifying?: boolean; 
-    filedJointReturn?: boolean; 
-    isClaimedByOther?: boolean; 
+    hasItin: boolean;
+    isCtcQualifying?: boolean;
+    filedJointReturn?: boolean;
+    isClaimedByOther?: boolean;
 }
 
 export interface TaxPayer {
@@ -26,7 +26,7 @@ export interface TaxPayer {
     isBlind: boolean;
     spouseIsOver65?: boolean;
     spouseIsBlind?: boolean;
-    residencyStatus?: 'us_resident' | 'non_resident'; 
+    residencyStatus?: 'us_resident' | 'non_resident';
     identityProtectionPin?: string;
 }
 
@@ -118,7 +118,7 @@ export interface Paystub {
     deductions: PaystubDeduction[];
     reimbursements: PaystubReimbursement[];
     directDeposits: PaystubDirectDeposit[];
-    
+
     // Aggregates
     grossPayCurrent: number;
     grossPayYTD: number;
@@ -132,21 +132,21 @@ export interface IncomeItem {
     id: string;
     description: string;
     owner?: 'primary' | 'spouse';
-    type: 
-        | 'w2' 
-        | '1099_nec' 
-        | '1099_int' 
-        | '1099_div' 
-        | 'stock' 
-        | 'ssa_1099' 
-        | 'rental'
-        | 'retirement_dist'
-        | 'iso_exercise'
-        | 'other';
+    type:
+    | 'w2'
+    | '1099_nec'
+    | '1099_int'
+    | '1099_div'
+    | 'stock'
+    | 'ssa_1099'
+    | 'rental'
+    | 'retirement_dist'
+    | 'iso_exercise'
+    | 'other';
     amount: number; // For W-2 this is Box 1
     withholding: number;
     payFrequency?: 'weekly' | 'biweekly' | 'semimonthly' | 'monthly' | 'annual';
-    
+
     originalPaystub?: Paystub; // New: Store the full source data for UI restoration
 
     details?: {
@@ -157,13 +157,13 @@ export interface IncomeItem {
         w2_box6_med_withheld?: number;
         w2_box10_dependent_care?: number;
         w2_box11_nonqualified_plans?: number; // NQDC
-        
+
         // Box 12 Codes
         w2_box12_code_c_group_term_life?: number; // Imputed income > 50k
         w2_box12_code_d_401k?: number;
         w2_box12_code_w_hsa?: number; // Employer + Employee pre-tax
         w2_box12_code_t_adoption?: number;
-        
+
         // Benefits / Reconciliation
         w2_retirement_plan_active?: boolean; // Box 13 Checkbox
         w2_statutory_employee?: boolean; // Box 13 Checkbox
@@ -171,13 +171,13 @@ export interface IncomeItem {
         w2_fsa_health_amount?: number; // Reduces Box 1/3/5
         w2_fsa_dependent_care_amount?: number; // Reduces Box 1/3/5, matches Box 10
         w2_commuter_benefits?: number;
-        
+
         // --- Investment ---
         tax_exempt_type?: 'none' | 'muni' | 'treasury';
         dividend_qualified?: boolean;
         foreign_tax_paid?: number; // Form 1116
         reit_dividend?: boolean; // Section 199A eligible
-        
+
         // Stock Sales
         capital_gain_type?: 'short_term' | 'long_term' | 'collectibles_28' | 'unrecaptured_1250_25';
         cost_basis?: number;
@@ -186,7 +186,7 @@ export interface IncomeItem {
         wash_sale_loss_disallowed?: number;
         iso_bargain_element?: number; // AMT
         qsbs_section_1202?: boolean;
-        
+
         // --- Business (Sched C) ---
         business_expense_total?: number;
         home_office_deduction?: number;
@@ -197,19 +197,19 @@ export interface IncomeItem {
         depreciation_section_179?: number;
         material_participation?: boolean; // Passive vs Non-passive
         accounting_method?: 'cash' | 'accrual';
-        qbi_sstb?: boolean; 
+        qbi_sstb?: boolean;
         qbi_w2_wages_paid?: number;
-        qbi_ubia?: number; 
+        qbi_ubia?: number;
 
         // --- Rental (Sched E) ---
-        rental_property_id?: string; 
+        rental_property_id?: string;
         rental_days_rented?: number;
         rental_days_personal?: number;
         rental_type?: 'residential' | 'commercial' | 'short_term';
         rental_active_participation?: boolean; // $25k allowance
         rental_real_estate_pro?: boolean; // Exception to PAL
         rental_depreciation?: number;
-        
+
         // --- Retirement ---
         distribution_code?: string;
         ira_basis?: number;
@@ -219,10 +219,10 @@ export interface IncomeItem {
 
 export interface DeductionItem {
     id: string;
-    category: 
-        | 'mortgage' | 'property_tax' | 'state_tax' | 'charity_cash' | 'charity_goods' 
-        | 'medical' | 'student_loan' | 'hsa_contrib' | 'educator_expense' | 'tuition_fees'
-        | 'fsa_health' | 'fsa_dependent_care' | 'adoption_credit' | 'energy_credit' | 'other';
+    category:
+    | 'mortgage' | 'property_tax' | 'state_tax' | 'charity_cash' | 'charity_goods'
+    | 'medical' | 'student_loan' | 'hsa_contrib' | 'educator_expense' | 'tuition_fees'
+    | 'fsa_health' | 'fsa_dependent_care' | 'adoption_credit' | 'energy_credit' | 'other';
     amount: number;
     description: string;
     details?: {
@@ -231,31 +231,36 @@ export interface DeductionItem {
         mortgage_balance?: number;
         mortgage_is_refinance?: boolean;
         mortgage_used_for_buy_build_improve?: boolean;
-        
+
         // Charity
         charity_organization_type?: '501c3_50' | 'non_501c3_30';
         charity_appraisal_attached?: boolean;
-        
+
         // Medical
         medical_insurance_premiums_after_tax?: number; // Sched A eligible
         medical_long_term_care_premiums?: number;
-        
+
         // FSA / HSA
         hsa_coverage_type?: 'self' | 'family';
         hsa_family_coverage?: boolean;
         hsa_months_eligible?: number;
         fsa_employer_contrib?: number; // For Form 2441 reconciliation
-        
+
         // Education
         student_id?: string;
         student_is_half_time?: boolean;
         student_first_4_years?: boolean; // AOTC vs LLC
         student_drug_conviction?: boolean;
-        
+
         // Credits
         adoption_expenses?: number;
         adoption_employer_assistance?: number;
         energy_improvement_type?: 'solar' | 'windows' | 'hvac';
+
+        // AI Metadata
+        ai_scanned?: boolean;
+        scan_date?: string;
+        confidence?: number;
     };
 }
 
@@ -293,7 +298,7 @@ export interface CarryoverState {
     charitable: number;
     nol: number;
     amtCredit: number;
-    passiveLosses: Record<string, number>; 
+    passiveLosses: Record<string, number>;
     qbiLosses: number;
 }
 
@@ -301,25 +306,25 @@ export interface TaxResult {
     grossIncome: number;
     adjustments: number;
     agi: number;
-    magi_niit: number; 
+    magi_niit: number;
     magi_roth: number;
     magi_student_loan: number;
-    
+
     standardDeduction: number;
     itemizedDeduction: number;
     deductionUsed: number;
     deductionType: 'standard' | 'itemized';
-    
+
     taxableIncome: number;
     taxableOrdinary: number;
-    taxableLTCG: number; 
-    taxable1250: number; 
-    taxableCollectibles: number; 
-    
+    taxableLTCG: number;
+    taxable1250: number;
+    taxableCollectibles: number;
+
     regularTax: number;
     alternativeMinimumTax: number;
-    totalIncomeTax: number; 
-    
+    totalIncomeTax: number;
+
     credits: {
         ctc_nonrefundable: number;
         ctc_refundable: number;
@@ -336,19 +341,19 @@ export interface TaxResult {
         total_nonrefundable: number;
         total_refundable: number;
     };
-    
-    payrollTax: number; 
+
+    payrollTax: number;
     selfEmploymentTax: number;
     niit: number;
     medicareSurtax: number;
     penalty_early_withdrawal: number;
     penalty_hsa: number;
-    
+
     totalTaxLiability: number;
     totalPayments: number;
     refund: number;
     amountDue: number;
-    
+
     effectiveRate: number;
     marginalRate: number;
     complianceAlerts: ComplianceAlert[];

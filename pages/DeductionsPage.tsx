@@ -209,11 +209,22 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                         title="Standard vs Itemized"
                         content="The standard deduction for 2025 is $15,000 (Single) or $30,000 (Joint). We'll automatically use whichever gives you a bigger refund."
                         icon="scale"
+                        variant="highlight"
                     />
                     <GuideTip
                         title="HSA is Triple Tax-Free"
                         content="HSA contributions reduce your taxable income today AND grow tax-free. It's one of the best deduction vehicles available."
                         icon="medical_services"
+                    />
+                    <GuideTip
+                        title="SALT Cap ($10k)"
+                        content="State and Local Tax (SALT) deduction is limited to $10,000 per year combined for property and income taxes."
+                        icon="public"
+                    />
+                    <GuideTip
+                        title="Charity Evidence"
+                        content="For cash donations under $250, distinct bank records are enough. Over $250, you need a written acknowledgment from the charity."
+                        icon="volunteer_activism"
                     />
                 </div>
             </div>

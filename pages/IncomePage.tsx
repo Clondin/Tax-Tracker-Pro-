@@ -216,12 +216,23 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                     <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block ml-1">Tax Tips</label>
                     <GuideTip
                         title="W-2 vs 1099?"
-                        content="W-2 is for employees where taxes are withheld. 1099 is for contractors/freelancers where you are responsible for your own taxes."
+                        content="W-2 is for employees (taxes withheld). 1099 is for contractors (you pay taxes). If you have both, add them separately."
                         icon="help"
+                        variant="highlight"
+                    />
+                    <GuideTip
+                        title="Business Expenses (1099)"
+                        content="If you have 1099-NEC income, you can deduct expenses! Keep receipts for software, home office, and supplies to lower your tax bill."
+                        icon="receipt_long"
+                    />
+                    <GuideTip
+                        title="Crypto & Stock Sales"
+                        content="Sold assets? You only pay tax on the *gain* (profit). Losses can offset gains and up to $3,000 of other income."
+                        icon="trending_up"
                     />
                     <GuideTip
                         title="Don't Forget Interest"
-                        content="Even small amounts of bank interest (1099-INT) must be reported. Check your banking app for tax documents."
+                        content="Even small amounts of bank interest (1099-INT) over $10 must be reported. Check your banking app for documents."
                         icon="savings"
                     />
                 </div>

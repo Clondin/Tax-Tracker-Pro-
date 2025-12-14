@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '../../lib/utils';
 
 interface GuideTipProps {
     title: string;
     content: string;
     icon?: string;
+    variant?: 'default' | 'highlight';
 }
 
-export const GuideTip: React.FC<GuideTipProps> = ({ title, content, icon = 'lightbulb' }) => {
+export const GuideTip: React.FC<GuideTipProps> = ({ title, content, icon = 'lightbulb', variant = 'default' }) => {
     const [isVisible, setIsVisible] = useState(true);
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     if (!isVisible) return null;
 
@@ -17,23 +20,64 @@ export const GuideTip: React.FC<GuideTipProps> = ({ title, content, icon = 'ligh
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100/50 dark:from-indigo-900/10 dark:to-indigo-800/5 border border-indigo-200 dark:border-indigo-800 rounded-xl relative group"
+            className={cn(
+                "group relative overflow-hidden rounded-xl border transition-all duration-300",
+                variant === 'default'
+                    ? "bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 shadow-sm"
+                    : "bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-200 dark:border-indigo-800",
+                isCollapsed ? "p-3" : "p-5"
+            )}
         >
-            <button
-                onClick={() => setIsVisible(false)}
-                className="absolute top-2 right-2 p-1 text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 opacity-0 group-hover:opacity-100 transition-all"
-            >
-                <span className="material-symbols-outlined text-sm">close</span>
-            </button>
-            <div className="flex gap-3">
-                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg h-fit">
-                    <span className="material-symbols-outlined text-indigo-600 dark:text-indigo-400 text-xl">{icon}</span>
+            {/* Accent Border Line */}
+            <div className={cn(
+                "absolute left-0 top-0 bottom-0 w-1",
+                variant === 'default' ? "bg-neutral-300 dark:bg-neutral-700" : "bg-indigo-500"
+            )} />
+
+            <div className="flex items-start gap-4 pl-2">
+                <div className={cn(
+                    "flex-shrink-0 p-2 rounded-lg transition-colors",
+                    variant === 'default' ? "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400" : "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                )}>
+                    <span className="material-symbols-outlined text-[20px]">{icon}</span>
                 </div>
-                <div>
-                    <h4 className="font-bold text-indigo-900 dark:text-indigo-100 text-sm mb-1">{title}</h4>
-                    <p className="text-sm text-indigo-800 dark:text-indigo-200/80 leading-relaxed">
-                        {content}
-                    </p>
+
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                        <h4 className={cn(
+                            "font-bold text-sm tracking-tight",
+                            variant === 'default' ? "text-neutral-900 dark:text-neutral-100" : "text-indigo-900 dark:text-indigo-100"
+                        )}>
+                            {title}
+                        </h4>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                                onClick={() => setIsCollapsed(!isCollapsed)}
+                                className="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">{isCollapsed ? 'expand_more' : 'expand_less'}</span>
+                            </button>
+                            <button
+                                onClick={() => setIsVisible(false)}
+                                className="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200"
+                            >
+                                <span className="material-symbols-outlined text-[16px]">close</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {!isCollapsed && (
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className={cn(
+                                "text-xs leading-relaxed",
+                                variant === 'default' ? "text-neutral-500 dark:text-neutral-400" : "text-indigo-700/80 dark:text-indigo-300/80"
+                            )}
+                        >
+                            {content}
+                        </motion.p>
+                    )}
                 </div>
             </div>
         </motion.div>
