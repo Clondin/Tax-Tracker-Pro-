@@ -1,7 +1,13 @@
 {
     "buildCommand": "npm run build",
+    "installCommand": "npm install",
     "outputDirectory": "dist",
     "framework": "vite",
+    "functions": {
+        "api/**/*.js": {
+            "includeFiles": "node_modules/@google/genai/**"
+        }
+    },
     "rewrites": [
         {
             "source": "/api/(.*)",
