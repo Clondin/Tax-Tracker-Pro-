@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const config = {
     api: {
@@ -34,7 +34,8 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'GEMINI_API_KEY environment variable not set' });
         }
 
-        const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
         const prompt = `You are a payroll document analyzer. Carefully examine this paystub image and extract ALL visible payroll information.
 
 CRITICAL - Extract these fields accurately:
@@ -79,23 +80,13 @@ IMPORTANT RULES:
 - If a value is not visible, use 0 for numbers or empty string for text
 - Return ONLY valid JSON, no markdown code blocks`;
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.0-flash',
-            contents: [
-                {
-                    role: 'user',
-                    parts: [
-                        { inlineData: { mimeType, data: base64Data } },
-                        { text: prompt }
-                    ]
-                }
-            ],
-            config: {
-                responseMimeType: 'application/json'
-            }
-        });
+        const response = await model.generateContent([
+            { inlineData: { mimeType, data: base64Data } },
+            { text: prompt }
+        ]);
 
-        const text = response.text;
+        const result = response.response;
+        const text = result.text();
         if (!text) {
             return res.status(502).json({ error: 'No response from Gemini' });
         }
