@@ -21,6 +21,15 @@ export const WizardPanel: React.FC<WizardPanelProps> = ({ isOpen, onClose, title
         return () => { document.body.style.overflow = 'unset'; };
     }, [isOpen]);
 
+    // Close on escape key
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [onClose]);
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -31,31 +40,36 @@ export const WizardPanel: React.FC<WizardPanelProps> = ({ isOpen, onClose, title
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
                     />
 
-                    {/* Panel */}
+                    {/* Centered Modal */}
                     <motion.div
-                        initial={{ x: '100%' }}
-                        animate={{ x: 0 }}
-                        exit={{ x: '100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className={cn(
-                            "fixed top-0 right-0 h-full bg-white dark:bg-card-dark shadow-2xl z-50 overflow-y-auto border-l border-white/20",
-                            width
-                        )}
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
                     >
-                        <div className="p-6 lg:p-8 min-h-full flex flex-col">
-                            <div className="flex justify-between items-center mb-8">
-                                <h2 className="text-2xl font-bold text-text-main dark:text-white">{title}</h2>
+                        <div
+                            className={cn(
+                                "bg-white dark:bg-card-dark rounded-2xl shadow-2xl w-full overflow-hidden pointer-events-auto max-h-[90vh] flex flex-col",
+                                width
+                            )}
+                        >
+                            {/* Header */}
+                            <div className="flex justify-between items-center p-6 border-b border-border-light dark:border-border-dark bg-neutral-50 dark:bg-neutral-900">
+                                <h2 className="text-xl font-bold text-text-main dark:text-white">{title}</h2>
                                 <button
                                     onClick={onClose}
-                                    className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                                    className="p-2 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors"
                                 >
                                     <span className="material-symbols-outlined">close</span>
                                 </button>
                             </div>
-                            <div className="flex-1">
+
+                            {/* Content */}
+                            <div className="flex-1 overflow-y-auto p-6">
                                 {children}
                             </div>
                         </div>

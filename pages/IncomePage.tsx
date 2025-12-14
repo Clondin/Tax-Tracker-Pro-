@@ -221,7 +221,7 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                     {/* Auto-Scan Banner */}
                     {activeCategory === 'W-2' && (
                         <div
-                            onClick={() => { setSelectedPaystub(undefined); setShowPaystubModal(true); }}
+                            onClick={() => { resetForm(); setShowPaystubModal(true); }}
                             className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 text-white cursor-pointer hover:shadow-lg hover:scale-[1.01] transition-all relative overflow-hidden group"
                         >
                             <div className="absolute top-0 right-0 -mr-10 -mt-10 w-32 h-32 bg-white/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>

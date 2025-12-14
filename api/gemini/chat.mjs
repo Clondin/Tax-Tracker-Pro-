@@ -1,13 +1,31 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
 export default async function handler(req, res) {
+    // CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
+    // Check API key
+    if (!process.env.GEMINI_API_KEY) {
+        console.error('GEMINI_API_KEY not set');
+        return res.status(500).json({
+            error: 'AI service not configured. Please set GEMINI_API_KEY environment variable.',
+            role: 'assistant',
+            content: 'I\'m sorry, the AI service is not configured yet. Please ask your administrator to set up the GEMINI_API_KEY in Vercel.'
+        });
+    }
+
     try {
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const { messages, context } = req.body;
 
         if (!messages || !Array.isArray(messages)) {
@@ -55,6 +73,10 @@ Rules:
 
     } catch (error) {
         console.error('Error generating chat response:', error);
-        return res.status(500).json({ error: 'Failed to generate response' });
+        return res.status(500).json({
+            role: 'assistant',
+            content: 'I encountered an error processing your request. Please try again.',
+            error: error.message
+        });
     }
 }

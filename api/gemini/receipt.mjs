@@ -1,13 +1,33 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
 export default async function handler(req, res) {
+    // CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
+    // Check API key
+    if (!process.env.GEMINI_API_KEY) {
+        console.error('GEMINI_API_KEY not set');
+        return res.status(500).json({
+            error: 'AI service not configured',
+            vendor: 'Unknown',
+            total: 0,
+            category: 'other',
+            description: 'Could not scan - API key missing'
+        });
+    }
+
     try {
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
         const { image, mimeType = 'image/png' } = req.body;
 
         if (!image) {
@@ -50,6 +70,6 @@ If you cannot determine a field, use null. Be conservative with the category - o
 
     } catch (error) {
         console.error('Error parsing receipt:', error);
-        return res.status(500).json({ error: 'Failed to parse receipt' });
+        return res.status(500).json({ error: 'Failed to parse receipt', message: error.message });
     }
 }
