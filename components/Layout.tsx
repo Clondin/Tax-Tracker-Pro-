@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Chatbot } from './Chatbot';
+import { Taxometer } from './Taxometer';
+import { CommandPalette } from './CommandPalette';
 import { IncomeItem, TaxResult, TaxPayer } from '../types';
 
 interface LayoutProps {
@@ -15,6 +17,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes = [], taxResult = null, taxPayer }) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
     // Ensure dark mode class is applied to html element
     useEffect(() => {
@@ -25,6 +28,19 @@ const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes =
             html.classList.remove('dark');
         }
     }, [theme]);
+
+    // Cmd+K listener
+    const handleKeyDown = useCallback((e: KeyboardEvent) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            setIsCommandPaletteOpen(prev => !prev);
+        }
+    }, []);
+
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleKeyDown]);
 
     const isActive = (path: string) => location.pathname === path;
 
@@ -66,13 +82,29 @@ const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes =
                     </nav>
 
                     <div className="flex items-center gap-4">
+                        {/* Taxometer */}
+                        {taxResult && location.pathname !== '/' && (
+                            <div className="hidden lg:block">
+                                <Taxometer refund={taxResult.refund || 0} amountDue={taxResult.amountDue || 0} />
+                            </div>
+                        )}
+
+                        {/* Command Palette Button */}
+                        <button
+                            onClick={() => setIsCommandPaletteOpen(true)}
+                            className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-sm text-text-muted hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                        >
+                            <span className="material-symbols-outlined text-[16px]">search</span>
+                            <kbd className="text-xs font-mono">⌘K</kbd>
+                        </button>
+
                         <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-background-light dark:hover:bg-neutral-800 transition-colors text-text-muted hover:text-primary">
                             <span className="material-symbols-outlined">
                                 {theme === 'light' ? 'dark_mode' : 'light_mode'}
                             </span>
                         </button>
                         <div className="h-8 w-8 rounded-full bg-gradient-to-br from-secondary to-emerald-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-secondary/20">
-                            JD
+                            {taxPayer?.firstName?.[0] || 'J'}{taxPayer?.lastName?.[0] || 'D'}
                         </div>
                     </div>
                 </div>
@@ -102,6 +134,7 @@ const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes =
                 {children}
             </main>
 
+            <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} />
             <Chatbot incomes={incomes} taxResult={taxResult} taxPayer={taxPayer} />
         </div>
     );

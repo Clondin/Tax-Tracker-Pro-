@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '../lib/utils';
@@ -18,11 +18,13 @@ interface ChatbotProps {
 export const Chatbot: React.FC<ChatbotProps> = ({ incomes, taxResult, taxPayer }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
-        { role: 'assistant', content: 'Hi! I can help you with your tax return. Ask me anything about your income, deductions, or general tax questions.' }
+        { role: 'assistant', content: 'Hi! I can help you with your tax return. Ask me anything about your income, deductions, or general tax questions. You can also use the microphone!' }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isListening, setIsListening] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const recognitionRef = useRef<any>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -32,11 +34,53 @@ export const Chatbot: React.FC<ChatbotProps> = ({ incomes, taxResult, taxPayer }
         scrollToBottom();
     }, [messages, isOpen]);
 
+    // Initialize Speech Recognition
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                recognitionRef.current = new SpeechRecognition();
+                recognitionRef.current.continuous = false;
+                recognitionRef.current.interimResults = false;
+                recognitionRef.current.lang = 'en-US';
+
+                recognitionRef.current.onresult = (event: any) => {
+                    const transcript = event.results[0][0].transcript;
+                    setInput(prev => prev + ' ' + transcript);
+                    setIsListening(false);
+                };
+
+                recognitionRef.current.onerror = () => {
+                    setIsListening(false);
+                };
+
+                recognitionRef.current.onend = () => {
+                    setIsListening(false);
+                };
+            }
+        }
+    }, []);
+
+    const toggleListening = useCallback(() => {
+        if (!recognitionRef.current) {
+            alert('Speech recognition is not supported in your browser.');
+            return;
+        }
+
+        if (isListening) {
+            recognitionRef.current.stop();
+            setIsListening(false);
+        } else {
+            setIsListening(true);
+            recognitionRef.current.start();
+        }
+    }, [isListening]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim() || isLoading) return;
 
-        const userMessage: Message = { role: 'user', content: input };
+        const userMessage: Message = { role: 'user', content: input.trim() };
         setMessages(prev => [...prev, userMessage]);
         setInput('');
         setIsLoading(true);
@@ -100,13 +144,16 @@ export const Chatbot: React.FC<ChatbotProps> = ({ incomes, taxResult, taxPayer }
                             <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
                                 <span className="material-symbols-outlined">smart_toy</span>
                             </div>
-                            <div>
+                            <div className="flex-1">
                                 <h3 className="font-bold">Tax Assistant</h3>
                                 <p className="text-xs text-indigo-100 flex items-center gap-1">
                                     <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                                    Online
+                                    {isListening ? 'Listening...' : 'Online'}
                                 </p>
                             </div>
+                            <button onClick={() => setMessages([{ role: 'assistant', content: 'History cleared. How can I help?' }])} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
+                                <span className="material-symbols-outlined text-sm">delete_sweep</span>
+                            </button>
                         </div>
 
                         {/* Messages */}
@@ -119,7 +166,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({ incomes, taxResult, taxPayer }
                                             ? "bg-primary text-white rounded-br-none"
                                             : "bg-white dark:bg-neutral-800 text-text-main dark:text-white rounded-bl-none border border-border-light dark:border-neutral-700"
                                     )}>
-                                        <ReactMarkdown className="prose prose-sm dark:prose-invert max-w-none">
+                                        <ReactMarkdown className="prose prose-sm dark:prose-invert max-w-none [&>p]:m-0">
                                             {msg.content}
                                         </ReactMarkdown>
                                     </div>
@@ -139,10 +186,22 @@ export const Chatbot: React.FC<ChatbotProps> = ({ incomes, taxResult, taxPayer }
 
                         {/* Input */}
                         <form onSubmit={handleSubmit} className="p-3 bg-white dark:bg-neutral-900 border-t border-border-light dark:border-neutral-700 flex gap-2">
+                            <button
+                                type="button"
+                                onClick={toggleListening}
+                                className={cn(
+                                    "p-2 rounded-xl transition-all",
+                                    isListening
+                                        ? "bg-red-500 text-white animate-pulse"
+                                        : "bg-neutral-100 dark:bg-neutral-800 text-text-muted hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                                )}
+                            >
+                                <span className="material-symbols-outlined">{isListening ? 'mic_off' : 'mic'}</span>
+                            </button>
                             <input
                                 value={input}
                                 onChange={e => setInput(e.target.value)}
-                                placeholder="Ask about your taxes..."
+                                placeholder={isListening ? "Listening..." : "Ask about your taxes..."}
                                 className="flex-1 bg-neutral-100 dark:bg-neutral-800 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all dark:text-white"
                             />
                             <button
