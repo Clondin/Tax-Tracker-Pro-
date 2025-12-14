@@ -158,60 +158,50 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                 </div>
             </div>
 
-            {/* AI Receipt Drop Zone */}
+            {/* AI Receipt Scanner - Compact Inline */}
             <div
                 onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={handleFileDrop}
                 className={cn(
-                    "border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer group",
-                    isDragging ? "border-primary bg-primary/5 scale-[1.01]" : "border-border-light dark:border-neutral-700 hover:border-primary/50 hover:bg-neutral-50 dark:hover:bg-neutral-800/50",
+                    "border border-dashed rounded-xl p-4 transition-all cursor-pointer flex items-center gap-4",
+                    isDragging ? "border-primary bg-primary/5" : "border-neutral-300 dark:border-neutral-700 hover:border-primary/50",
                     isScanning && "animate-pulse"
                 )}
             >
-                <div className="flex flex-col items-center gap-3">
-                    <div className={cn("p-4 rounded-full transition-colors", isDragging ? "bg-primary text-white" : "bg-neutral-100 dark:bg-neutral-800 group-hover:bg-primary/10")}>
-                        <span className="material-symbols-outlined text-3xl">{isScanning ? 'hourglass_top' : 'document_scanner'}</span>
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-lg text-text-main dark:text-white">
-                            {isScanning ? 'Scanning Receipt...' : 'AI Receipt Scanner'}
-                        </h3>
-                        <p className="text-text-muted text-sm">Drop a receipt image to auto-extract vendor, amount, and category</p>
-                    </div>
+                <div className={cn("p-2 rounded-lg", isDragging ? "bg-primary text-white" : "bg-neutral-100 dark:bg-neutral-800")}>
+                    <span className="material-symbols-outlined text-xl">{isScanning ? 'hourglass_top' : 'document_scanner'}</span>
+                </div>
+                <div className="flex-1">
+                    <span className="font-semibold text-sm text-text-main dark:text-white">
+                        {isScanning ? 'Scanning...' : 'AI Receipt Scanner'}
+                    </span>
+                    <span className="text-xs text-text-muted ml-2">Drop receipt image</span>
                 </div>
             </div>
 
-            {/* Deduction Category Cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2">
-                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block ml-1">Select Deduction Type</label>
-                    <div className="grid grid-cols-2 gap-4">
-                        {DEDUCTION_CATEGORIES.map(cat => (
-                            <motion.button
-                                key={cat.id}
-                                whileHover={{ scale: 1.02, y: -2 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => selectCategory(cat.id)}
-                                className={cn(
-                                    "relative group p-5 rounded-2xl border-2 text-left transition-all duration-300",
-                                    "bg-white dark:bg-card-dark border-border-light dark:border-border-dark hover:border-neutral-300 dark:hover:border-neutral-600 hover:shadow-xl"
-                                )}
-                            >
-                                <div className={`p-3 rounded-xl inline-block mb-3 transition-colors ${cat.bgColor}`}>
-                                    <span className={`material-symbols-outlined text-2xl ${cat.color}`}>{cat.icon}</span>
-                                </div>
-                                <div className="font-bold text-text-main dark:text-white">{cat.label}</div>
-                                <div className="text-xs text-text-muted mt-0.5">{cat.subtitle}</div>
-                            </motion.button>
-                        ))}
-                    </div>
-                </div>
-                <div className="space-y-4">
-                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block ml-1">Smart Tips</label>
-                    <div className="space-y-4">
-                        {/* Tips moved to WizardContext */}
-                    </div>
+            {/* Deduction Category Cards - Full Width */}
+            <div>
+                <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block ml-1">Select Deduction Type</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {DEDUCTION_CATEGORIES.map(cat => (
+                        <motion.button
+                            key={cat.id}
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => selectCategory(cat.id)}
+                            className={cn(
+                                "relative group p-5 rounded-2xl border-2 text-left transition-all duration-300",
+                                "bg-white dark:bg-card-dark border-border-light dark:border-border-dark hover:border-neutral-300 dark:hover:border-neutral-600 hover:shadow-xl"
+                            )}
+                        >
+                            <div className={`p-3 rounded-xl inline-block mb-3 transition-colors ${cat.bgColor}`}>
+                                <span className={`material-symbols-outlined text-2xl ${cat.color}`}>{cat.icon}</span>
+                            </div>
+                            <div className="font-bold text-text-main dark:text-white">{cat.label}</div>
+                            <div className="text-xs text-text-muted mt-0.5">{cat.subtitle}</div>
+                        </motion.button>
+                    ))}
                 </div>
             </div>
 
