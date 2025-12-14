@@ -1,11 +1,13 @@
 {
-    "buildCommand": "npm run build",
-    "installCommand": "npm install",
-    "outputDirectory": "dist",
     "framework": "vite",
-    "functions": {
-        "api/**/*.mjs": {
-            "includeFiles": "node_modules/@google/generative-ai/**"
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "/api/$1"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
         }
-    }
+    ]
 }
