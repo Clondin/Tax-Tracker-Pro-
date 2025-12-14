@@ -93,13 +93,16 @@ const server = http.createServer(async (req, res) => {
             `;
 
         const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: {
-            parts: [
-              { inlineData: { mimeType, data: base64Data } },
-              { text: prompt }
-            ]
-          },
+          model: 'gemini-2.0-flash',
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                { inlineData: { mimeType, data: base64Data } },
+                { text: prompt }
+              ]
+            }
+          ],
           config: {
             responseMimeType: 'application/json'
           }
