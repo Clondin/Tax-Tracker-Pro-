@@ -121,9 +121,10 @@ export const Chatbot: React.FC<ChatbotProps> = ({ incomes, taxResult, taxPayer }
 
             const data = await response.json();
             setMessages(prev => [...prev, data]);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Chat error:', error);
-            setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
+            const errorMessage = error.message || 'Sorry, I encountered an error.';
+            setMessages(prev => [...prev, { role: 'assistant', content: errorMessage }]);
         } finally {
             setIsLoading(false);
         }
@@ -177,7 +178,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({ incomes, taxResult, taxPayer }
                                             ? "bg-primary text-white rounded-br-none"
                                             : "bg-white dark:bg-neutral-800 text-text-main dark:text-white rounded-bl-none border border-border-light dark:border-neutral-700"
                                     )}>
-                                        <ReactMarkdown className="prose prose-sm dark:prose-invert max-w-none [&>p]:m-0">
+                                        <ReactMarkdown>
                                             {msg.content}
                                         </ReactMarkdown>
                                     </div>

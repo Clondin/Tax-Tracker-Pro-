@@ -151,10 +151,10 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
             }));
 
             setAiState('complete');
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             setAiState('error');
-            setErrorMsg("Failed to process paystub. This may be due to browser limitations or API key issues.");
+            setErrorMsg(err.message || "Failed to process paystub.");
         }
     };
 
@@ -229,8 +229,8 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
                                     key={item.id}
                                     onClick={() => setActiveSection(item.id)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all ${activeSection === item.id
-                                            ? 'bg-white dark:bg-neutral-800 text-primary dark:text-white shadow-sm'
-                                            : 'text-neutral-500 hover:bg-white/50 dark:hover:bg-neutral-800/50'
+                                        ? 'bg-white dark:bg-neutral-800 text-primary dark:text-white shadow-sm'
+                                        : 'text-neutral-500 hover:bg-white/50 dark:hover:bg-neutral-800/50'
                                         }`}
                                 >
                                     <span className="material-symbols-outlined text-[18px]">{item.icon}</span>

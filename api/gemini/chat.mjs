@@ -57,7 +57,7 @@ Rules: Be concise. Use markdown. Disclaim you're AI, not legal advice.`;
         console.error('Chat error:', error.message);
         return res.status(500).json({
             role: 'assistant',
-            content: 'Sorry, I encountered an error. Please try again.'
+            content: `Error: ${error.message}`
         });
     }
 }
