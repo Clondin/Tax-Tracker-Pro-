@@ -1,6 +1,14 @@
-const { GoogleGenAI } = require('@google/genai');
+import { GoogleGenAI } from '@google/genai';
 
-module.exports = async function handler(req, res) {
+export const config = {
+    api: {
+        bodyParser: {
+            sizeLimit: '12mb',
+        },
+    },
+};
+
+export default async function handler(req, res) {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -23,7 +31,7 @@ module.exports = async function handler(req, res) {
 
         const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
         if (!GEMINI_API_KEY) {
-            return res.status(500).json({ error: 'Gemini API key not configured. Add GEMINI_API_KEY to Vercel environment variables.' });
+            return res.status(500).json({ error: 'GEMINI_API_KEY environment variable not set' });
         }
 
         const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -73,12 +81,4 @@ module.exports = async function handler(req, res) {
         console.error('Gemini paystub processing failed', error);
         return res.status(500).json({ error: 'Failed to process paystub: ' + error.message });
     }
-};
-
-module.exports.config = {
-    api: {
-        bodyParser: {
-            sizeLimit: '12mb',
-        },
-    },
-};
+}
