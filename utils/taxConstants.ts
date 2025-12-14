@@ -2,53 +2,53 @@
 // Source: IRS Revenue Procedures (Projected/Preliminary)
 
 export const STANDARD_DEDUCTION_2025 = {
-    single: 15600,
-    married_joint: 31200,
-    married_separate: 15600,
-    head_household: 22800,
+    single: 15750,
+    married_joint: 31500,
+    married_separate: 15750,
+    head_household: 23625,
 };
 
 export const STD_DED_ADD_ON_2025 = {
-    unmarried: 1950, 
-    married: 1550,   
+    unmarried: 1950,
+    married: 1550,
 };
 
 // [Limit, Rate]
 export const BRACKETS_2025 = {
     single: [
-        { limit: 12750, rate: 0.10 },
-        { limit: 51525, rate: 0.12 },
+        { limit: 11925, rate: 0.10 },
+        { limit: 48475, rate: 0.12 },
         { limit: 103350, rate: 0.22 },
-        { limit: 185350, rate: 0.24 },
-        { limit: 243700, rate: 0.32 },
-        { limit: 609350, rate: 0.35 },
+        { limit: 197300, rate: 0.24 },
+        { limit: 250525, rate: 0.32 },
+        { limit: 626350, rate: 0.35 },
         { limit: Infinity, rate: 0.37 },
     ],
     married_joint: [
-        { limit: 25500, rate: 0.10 },
-        { limit: 103050, rate: 0.12 },
+        { limit: 23850, rate: 0.10 },
+        { limit: 96950, rate: 0.12 },
         { limit: 206700, rate: 0.22 },
-        { limit: 370700, rate: 0.24 },
-        { limit: 487400, rate: 0.32 },
-        { limit: 731200, rate: 0.35 },
+        { limit: 394600, rate: 0.24 },
+        { limit: 501050, rate: 0.32 },
+        { limit: 751600, rate: 0.35 },
         { limit: Infinity, rate: 0.37 },
     ],
     married_separate: [
-        { limit: 12750, rate: 0.10 },
-        { limit: 51525, rate: 0.12 },
+        { limit: 11925, rate: 0.10 },
+        { limit: 48475, rate: 0.12 },
         { limit: 103350, rate: 0.22 },
-        { limit: 185350, rate: 0.24 },
-        { limit: 243700, rate: 0.32 },
-        { limit: 365600, rate: 0.35 },
+        { limit: 197300, rate: 0.24 },
+        { limit: 250525, rate: 0.32 },
+        { limit: 375800, rate: 0.35 },
         { limit: Infinity, rate: 0.37 },
     ],
     head_household: [
-        { limit: 19150, rate: 0.10 },
-        { limit: 73300, rate: 0.12 },
-        { limit: 112900, rate: 0.22 },
-        { limit: 198750, rate: 0.24 },
-        { limit: 247100, rate: 0.32 },
-        { limit: 641850, rate: 0.35 },
+        { limit: 17000, rate: 0.10 },
+        { limit: 64850, rate: 0.12 },
+        { limit: 103350, rate: 0.22 },
+        { limit: 197300, rate: 0.24 },
+        { limit: 250500, rate: 0.32 },
+        { limit: 626350, rate: 0.35 },
         { limit: Infinity, rate: 0.37 },
     ],
 };
@@ -96,7 +96,7 @@ export const AMT_CONSTANTS_2025 = {
 };
 
 export const SE_CONSTANTS = {
-    wageBase: 172200,
+    wageBase: 176100,
     ssRate: 0.124,
     medRate: 0.029,
 };
