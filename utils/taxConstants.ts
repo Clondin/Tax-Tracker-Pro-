@@ -1,5 +1,5 @@
 // 2025 Tax Configuration
-// Source: IRS Revenue Procedures (Projected/Preliminary)
+// Source: IRS Revenue Procedure 2024-40, Rev Proc 2025-32 (OBBBA updates)
 
 export const STANDARD_DEDUCTION_2025 = {
     single: 15750,
@@ -9,8 +9,8 @@ export const STANDARD_DEDUCTION_2025 = {
 };
 
 export const STD_DED_ADD_ON_2025 = {
-    unmarried: 1950,
-    married: 1550,
+    unmarried: 2000, // Single or head of household, 65+/blind
+    married: 1600,   // Married filing jointly, 65+/blind per spouse
 };
 
 // [Limit, Rate]
@@ -55,48 +55,48 @@ export const BRACKETS_2025 = {
 
 export const LTCG_BRACKETS_2025 = {
     single: [
-        { limit: 47025, rate: 0.00 },
-        { limit: 518900, rate: 0.15 },
+        { limit: 48350, rate: 0.00 },
+        { limit: 533400, rate: 0.15 },
         { limit: Infinity, rate: 0.20 },
     ],
     married_joint: [
-        { limit: 94050, rate: 0.00 },
-        { limit: 583750, rate: 0.15 },
+        { limit: 96700, rate: 0.00 },
+        { limit: 600050, rate: 0.15 },
         { limit: Infinity, rate: 0.20 },
     ],
     married_separate: [
-        { limit: 47025, rate: 0.00 },
-        { limit: 291850, rate: 0.15 },
+        { limit: 48350, rate: 0.00 },
+        { limit: 300025, rate: 0.15 },
         { limit: Infinity, rate: 0.20 },
     ],
     head_household: [
-        { limit: 63950, rate: 0.00 },
-        { limit: 551350, rate: 0.15 },
+        { limit: 64750, rate: 0.00 },
+        { limit: 566700, rate: 0.15 },
         { limit: Infinity, rate: 0.20 },
     ],
 };
 
 export const AMT_CONSTANTS_2025 = {
     exemption: {
-        single: 87700,
-        married_joint: 175400,
-        married_separate: 87700,
-        head_household: 87700,
+        single: 88100,
+        married_joint: 137000,
+        married_separate: 68500,
+        head_household: 88100,
     },
     phaseoutStart: {
-        single: 609350,
-        married_joint: 1218700,
-        married_separate: 609350,
-        head_household: 609350,
+        single: 626350,
+        married_joint: 1252700,
+        married_separate: 626350,
+        head_household: 626350,
     },
     phaseoutRate: 0.25,
-    bracketBoundary: 220700,
+    bracketBoundary: 232600,
     rateLow: 0.26,
     rateHigh: 0.28
 };
 
 export const SE_CONSTANTS = {
-    wageBase: 176100,
+    wageBase: 176100, // 2025 Social Security wage base
     ssRate: 0.124,
     medRate: 0.029,
 };
@@ -121,26 +121,44 @@ export const SS_TAX_THRESHOLDS = {
 };
 
 export const EIC_CONFIG_2025 = {
-    investmentIncomeLimit: 12150, // Approx 2025
-    // [Credit Rate, Earned Income Limit, Phaseout Start (Single), Phaseout Start (Joint), Phaseout Rate]
+    investmentIncomeLimit: 11950,
     // 0 Kids
-    c0: { rate: 0.0765, maxEarned: 8260, phaseStartSingle: 10330, phaseStartJoint: 17630, phaseRate: 0.0765 },
+    c0: { rate: 0.0765, maxEarned: 8490, phaseStartSingle: 10620, phaseStartJoint: 18120, phaseRate: 0.0765 },
     // 1 Kid
-    c1: { rate: 0.34, maxEarned: 12720, phaseStartSingle: 22700, phaseStartJoint: 30000, phaseRate: 0.1598 },
+    c1: { rate: 0.34, maxEarned: 12870, phaseStartSingle: 23450, phaseStartJoint: 30940, phaseRate: 0.1598 },
     // 2 Kids
-    c2: { rate: 0.40, maxEarned: 17870, phaseStartSingle: 22700, phaseStartJoint: 30000, phaseRate: 0.2106 },
+    c2: { rate: 0.40, maxEarned: 18060, phaseStartSingle: 23450, phaseStartJoint: 30940, phaseRate: 0.2106 },
     // 3+ Kids
-    c3: { rate: 0.45, maxEarned: 17870, phaseStartSingle: 22700, phaseStartJoint: 30000, phaseRate: 0.2106 }
+    c3: { rate: 0.45, maxEarned: 18060, phaseStartSingle: 23450, phaseStartJoint: 30940, phaseRate: 0.2106 }
+};
+
+export const CTC_2025 = {
+    perChild: 2000,          // Per qualifying child under 17
+    perOtherDependent: 500,  // Other dependents credit
+    refundableCap: 1700,     // Maximum ACTC per child
+    refundableRate: 0.15,
+    earnedIncomeFloor: 2500,
+    phaseoutThreshold: { single: 200000, married_joint: 400000 },
+    phaseoutRate: 0.05       // $50 per $1000 over threshold
 };
 
 export const QBI_THRESHOLDS_2025 = {
-    single: { lower: 191950, upper: 241950 },
-    married_joint: { lower: 383900, upper: 483900 }
+    single: { lower: 197300, upper: 247300 },
+    married_joint: { lower: 394600, upper: 494600 }
 };
 
-export const IRA_DEDUCTION_PHASEOUT = {
-    single: { lower: 77000, upper: 87000 },
-    married_joint: { lower: 123000, upper: 143000 }
+export const IRA_LIMITS_2025 = {
+    contributionLimit: 7000,
+    catchup: 1000,          // If 50+
+    phaseout: {
+        single: { lower: 79000, upper: 89000 },
+        married_joint: { lower: 126000, upper: 146000 }
+    }
+};
+
+export const ROTH_IRA_PHASEOUT_2025 = {
+    single: { lower: 150000, upper: 165000 },
+    married_joint: { lower: 236000, upper: 246000 }
 };
 
 export const STUDENT_LOAN_PHASEOUT = {
@@ -150,7 +168,7 @@ export const STUDENT_LOAN_PHASEOUT = {
 
 export const AOTC_CONSTANTS = {
     maxCredit: 2500,
-    refundableCap: 1000, // 40% of 2500
+    refundableCap: 1000,
     phaseout: {
         single: { lower: 80000, upper: 90000 },
         married_joint: { lower: 160000, upper: 180000 }
@@ -163,4 +181,17 @@ export const HSA_LIMITS_2025 = {
     catchup: 1000
 };
 
-export const ADOPTION_CREDIT_LIMIT = 17290; // Approx 2025
+export const RETIREMENT_LIMITS_2025 = {
+    '401k': 23500,
+    '401k_catchup': 7500,     // If 50+
+    '401k_catchup_60_63': 11250, // Super catch-up for ages 60-63
+    ira: 7000,
+    ira_catchup: 1000
+};
+
+export const GIFT_TAX_2025 = {
+    annualExclusion: 19000,
+    lifetimeExclusion: 13990000
+};
+
+export const ADOPTION_CREDIT_LIMIT = 17530;
