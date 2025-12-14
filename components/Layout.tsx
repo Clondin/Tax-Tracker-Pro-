@@ -57,11 +57,13 @@ const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes =
             {/* Top Header */}
             <header className="sticky top-0 z-50 bg-white/80 dark:bg-card-dark/80 backdrop-blur-md border-b border-border-light dark:border-border-dark shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-                        <div className="bg-gradient-to-br from-primary to-primary-dark p-2 rounded-lg shadow-lg shadow-primary/20">
-                            <span className="material-symbols-outlined text-white text-xl">bar_chart</span>
+                    <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
+                        <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 p-2.5 rounded-xl shadow-lg shadow-purple-500/25 group-hover:shadow-purple-500/40 transition-all duration-300">
+                            <span className="material-symbols-outlined text-white text-xl">monitoring</span>
                         </div>
-                        <span className="font-bold text-xl tracking-tight">TaxTracker <span className="text-primary">Pro</span></span>
+                        <span className="font-bold text-xl tracking-tight">
+                            TaxTracker <span className="gradient-text">Pro</span>
+                        </span>
                     </div>
 
                     {/* Desktop Nav */}
