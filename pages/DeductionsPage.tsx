@@ -146,12 +146,16 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                     <p className="text-text-muted ml-1">Reduce your taxable income with eligible deductions</p>
                 </div>
 
-                {deductions.length > 0 && (
+                <div className="flex gap-4">
                     <div className="glass-card rounded-xl px-5 py-3 border-l-4 border-l-purple-500">
                         <div className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wide">Total Deductions</div>
                         <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">${totalDeductions.toLocaleString()}</div>
                     </div>
-                )}
+                    <div className="glass-card rounded-xl px-5 py-3 border-l-4 border-l-neutral-400 hidden sm:block">
+                        <div className="text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">Standard Ded. (Target)</div>
+                        <div className="text-2xl font-bold text-neutral-600 dark:text-neutral-300">$15,750</div>
+                    </div>
+                </div>
             </div>
 
             {/* AI Receipt Drop Zone */}
