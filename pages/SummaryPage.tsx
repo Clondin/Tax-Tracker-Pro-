@@ -48,6 +48,15 @@ const SummaryPage: React.FC<SummaryPageProps> = ({ taxResult }) => {
     const result = adjustedResult || taxResult;
     const isRefund = result.refund > 0;
 
+    // Missing Info Logic
+    const missingItems = useMemo(() => {
+        const items = [];
+        if (taxResult.totalTaxLiability === 0 && taxResult.refund === 0) items.push({ id: 'income', label: 'Add your W-2 or 1099 income', link: '/income' });
+        if (taxResult.deductionUsed < 14600) items.push({ id: 'deductions', label: 'Review deductions (you are using Standard)', link: '/deductions' });
+        if (!taxResult.credits.total_refundable && !taxResult.credits.ctc_nonrefundable) items.push({ id: 'credits', label: 'Check for tax credits', link: '/deductions' });
+        return items;
+    }, [taxResult]);
+
     return (
         <div className="flex flex-col gap-8 pb-12">
             {/* Header */}
@@ -110,6 +119,30 @@ const SummaryPage: React.FC<SummaryPageProps> = ({ taxResult }) => {
                     </motion.button>
                 </motion.div>
             </div>
+
+            {/* Missing Info Checklist */}
+            {missingItems.length > 0 && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-800/50 rounded-lg">
+                        <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">checklist</span>
+                    </div>
+                    <div className="flex-1">
+                        <h3 className="font-bold text-blue-900 dark:text-blue-100 text-sm">Finish Your Return</h3>
+                        <div className="flex flex-col sm:flex-row gap-x-4 gap-y-1 mt-1">
+                            {missingItems.map(item => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => window.location.href = item.link} // Simple nav
+                                    className="text-xs font-medium text-blue-700 dark:text-blue-300 hover:underline flex items-center gap-1 text-left"
+                                >
+                                    <span className="material-symbols-outlined text-[10px]">arrow_forward</span>
+                                    {item.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Compliance Alerts */}
             <AnimatePresence>

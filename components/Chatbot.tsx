@@ -15,10 +15,16 @@ interface ChatbotProps {
     taxPayer?: TaxPayer;
 }
 
+const QUICK_PROMPTS = [
+    "Deductions help",
+    "Estimated refund?",
+    "Tax bracket status"
+];
+
 export const Chatbot: React.FC<ChatbotProps> = ({ incomes, taxResult, taxPayer }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
-        { role: 'assistant', content: 'Hi! I can help you with your tax return. Ask me anything about your income, deductions, or general tax questions. You can also use the microphone!' }
+        { role: 'assistant', content: 'Tax Assistant online. Secure connection established.' }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +40,6 @@ export const Chatbot: React.FC<ChatbotProps> = ({ incomes, taxResult, taxPayer }
         scrollToBottom();
     }, [messages, isOpen]);
 
-    // Initialize Speech Recognition
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -50,23 +55,17 @@ export const Chatbot: React.FC<ChatbotProps> = ({ incomes, taxResult, taxPayer }
                     setIsListening(false);
                 };
 
-                recognitionRef.current.onerror = () => {
-                    setIsListening(false);
-                };
-
-                recognitionRef.current.onend = () => {
-                    setIsListening(false);
-                };
+                recognitionRef.current.onerror = () => setIsListening(false);
+                recognitionRef.current.onend = () => setIsListening(false);
             }
         }
     }, []);
 
     const toggleListening = useCallback(() => {
         if (!recognitionRef.current) {
-            alert('Speech recognition is not supported in your browser.');
+            alert('Mic unavailable');
             return;
         }
-
         if (isListening) {
             recognitionRef.current.stop();
             setIsListening(false);
@@ -76,11 +75,10 @@ export const Chatbot: React.FC<ChatbotProps> = ({ incomes, taxResult, taxPayer }
         }
     }, [isListening]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!input.trim() || isLoading) return;
+    const sendMessage = async (content: string) => {
+        if (!content.trim() || isLoading) return;
 
-        const userMessage: Message = { role: 'user', content: input.trim() };
+        const userMessage: Message = { role: 'user', content: content.trim() };
         setMessages(prev => [...prev, userMessage]);
         setInput('');
         setIsLoading(true);
@@ -100,118 +98,162 @@ export const Chatbot: React.FC<ChatbotProps> = ({ incomes, taxResult, taxPayer }
             const response = await fetch('/api/gemini/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    messages: [...messages, userMessage],
-                    context
-                })
+                body: JSON.stringify({ messages: [...messages, userMessage], context })
             });
 
-            if (!response.ok) throw new Error('Failed to get response');
+            if (!response.ok) {
+                let errorDetails = `Error ${response.status}`;
+                try {
+                    const data = await response.json();
+                    if (data.error) errorDetails = data.error;
+                    else if (data.content) errorDetails = data.content;
+                } catch (e) { }
+                throw new Error(errorDetails);
+            }
 
             const data = await response.json();
             setMessages(prev => [...prev, data]);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Chat error:', error);
-            setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
+            setMessages(prev => [...prev, { role: 'assistant', content: error.message || 'System error.' }]);
         } finally {
             setIsLoading(false);
         }
     };
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        sendMessage(input);
+    };
+
     return (
         <>
-            {/* Toggle Button */}
+            {/* Toggle Button - Minimalist */}
             <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setIsOpen(!isOpen)}
-                className="fixed bottom-6 right-6 z-50 p-4 bg-gradient-to-br from-primary to-indigo-600 text-white rounded-full shadow-2xl hover:shadow-primary/50 transition-all"
+                className={cn(
+                    "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 border border-neutral-800 dark:border-neutral-200"
+                )}
             >
-                <span className="material-symbols-outlined text-3xl">{isOpen ? 'close' : 'smart_toy'}</span>
+                <span className="material-symbols-outlined text-[24px]">{isOpen ? 'close' : 'smart_toy'}</span>
             </motion.button>
 
-            {/* Chat Window */}
+            {/* Chat Panel - Professional Window */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        initial={{ opacity: 0, y: 10, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        className="fixed bottom-24 right-6 w-96 h-[500px] bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-border-light dark:border-neutral-700 z-50 flex flex-col overflow-hidden"
+                        exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="fixed bottom-24 right-6 w-[380px] h-[600px] z-50 flex flex-col overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-2xl bg-white dark:bg-[#111]"
                     >
-                        {/* Header */}
-                        <div className="p-4 bg-gradient-to-r from-primary to-indigo-600 text-white flex items-center gap-3">
-                            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                <span className="material-symbols-outlined">smart_toy</span>
+                        {/* Header - Strict Tool Look */}
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100 dark:border-neutral-800 bg-white/50 dark:bg-[#111]/50 backdrop-blur-md">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
+                                <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 tracking-tight">AI Assistant</span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 text-neutral-500 font-mono">
+                                    v2.5
+                                </span>
                             </div>
-                            <div className="flex-1">
-                                <h3 className="font-bold">Tax Assistant</h3>
-                                <p className="text-xs text-indigo-100 flex items-center gap-1">
-                                    <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                                    {isListening ? 'Listening...' : 'Online'}
-                                </p>
-                            </div>
-                            <button onClick={() => setMessages([{ role: 'assistant', content: 'History cleared. How can I help?' }])} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
-                                <span className="material-symbols-outlined text-sm">delete_sweep</span>
+                            <button
+                                onClick={() => setMessages([{ role: 'assistant', content: 'History purged. Ready.' }])}
+                                className="p-1.5 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">history_toggle_off</span>
                             </button>
                         </div>
 
-                        {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-neutral-50 dark:bg-neutral-950">
+                        {/* Messages Area - Clean Typography */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-white dark:bg-[#111]">
                             {messages.map((msg, i) => (
-                                <div key={i} className={cn("flex", msg.role === 'user' ? "justify-end" : "justify-start")}>
-                                    <div className={cn(
-                                        "max-w-[80%] p-3 rounded-2xl text-sm shadow-sm",
-                                        msg.role === 'user'
-                                            ? "bg-primary text-white rounded-br-none"
-                                            : "bg-white dark:bg-neutral-800 text-text-main dark:text-white rounded-bl-none border border-border-light dark:border-neutral-700"
-                                    )}>
-                                        <ReactMarkdown className="prose prose-sm dark:prose-invert max-w-none [&>p]:m-0">
-                                            {msg.content}
-                                        </ReactMarkdown>
+                                <div key={i} className={cn("flex flex-col gap-1", msg.role === 'user' ? "items-end" : "items-start")}>
+                                    <div className="flex items-end gap-2 max-w-[85%]">
+                                        {msg.role === 'assistant' && (
+                                            <div className="w-6 h-6 rounded bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center flex-shrink-0">
+                                                <span className="material-symbols-outlined text-[14px] text-neutral-500">smart_toy</span>
+                                            </div>
+                                        )}
+
+                                        <div className={cn(
+                                            "px-3.5 py-2.5 text-sm leading-relaxed",
+                                            msg.role === 'user'
+                                                ? "bg-neutral-900 dark:bg-neutral-200 text-white dark:text-neutral-900 rounded-2xl rounded-br-sm"
+                                                : "bg-transparent text-neutral-700 dark:text-neutral-300 rounded-none pl-0"
+                                        )}>
+                                            <div className="prose prose-sm dark:prose-invert max-w-none text-current [&>p]:mb-2 [&>p:last-child]:mb-0 [&>ul]:list-disc [&>ul]:pl-4">
+                                                <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
+
+                            {/* Loading State - Minimal Pulse */}
                             {isLoading && (
-                                <div className="flex justify-start">
-                                    <div className="bg-white dark:bg-neutral-800 p-3 rounded-2xl rounded-bl-none border border-border-light dark:border-neutral-700 flex gap-1">
-                                        <span className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"></span>
-                                        <span className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce delay-75"></span>
-                                        <span className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce delay-150"></span>
+                                <div className="flex items-start gap-2">
+                                    <div className="w-6 h-6 rounded bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center flex-shrink-0">
+                                        <span className="material-symbols-outlined text-[14px] text-neutral-500">smart_toy</span>
+                                    </div>
+                                    <div className="flex gap-1 h-6 items-center">
+                                        <span className="w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-pulse"></span>
+                                        <span className="w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-pulse delay-75"></span>
+                                        <span className="w-1.5 h-1.5 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-pulse delay-150"></span>
                                     </div>
                                 </div>
                             )}
                             <div ref={messagesEndRef} />
                         </div>
 
-                        {/* Input */}
-                        <form onSubmit={handleSubmit} className="p-3 bg-white dark:bg-neutral-900 border-t border-border-light dark:border-neutral-700 flex gap-2">
-                            <button
-                                type="button"
-                                onClick={toggleListening}
-                                className={cn(
-                                    "p-2 rounded-xl transition-all",
-                                    isListening
-                                        ? "bg-red-500 text-white animate-pulse"
-                                        : "bg-neutral-100 dark:bg-neutral-800 text-text-muted hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                                )}
-                            >
-                                <span className="material-symbols-outlined">{isListening ? 'mic_off' : 'mic'}</span>
-                            </button>
-                            <input
-                                value={input}
-                                onChange={e => setInput(e.target.value)}
-                                placeholder={isListening ? "Listening..." : "Ask about your taxes..."}
-                                className="flex-1 bg-neutral-100 dark:bg-neutral-800 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all dark:text-white"
-                            />
-                            <button
-                                type="submit"
-                                disabled={isLoading || !input.trim()}
-                                className="p-2 bg-primary text-white rounded-xl hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <span className="material-symbols-outlined">send</span>
-                            </button>
-                        </form>
+                        {/* Quick Prompts - Subtle Pills */}
+                        {messages.length < 3 && !isLoading && (
+                            <div className="px-4 py-2 flex gap-2 overflow-x-auto scrollbar-hide">
+                                {QUICK_PROMPTS.map((prompt) => (
+                                    <button
+                                        key={prompt}
+                                        onClick={() => sendMessage(prompt)}
+                                        className="whitespace-nowrap px-3 py-1.5 text-xs font-medium border border-neutral-200 dark:border-neutral-800 rounded-full text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                                    >
+                                        {prompt}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Input Area - Integrated */}
+                        <div className="p-3 border-t border-neutral-100 dark:border-neutral-800 bg-white dark:bg-[#111]">
+                            <form onSubmit={handleSubmit} className="flex gap-2 items-center bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800 px-2 py-1.5 transition-colors focus-within:border-neutral-300 dark:focus-within:border-neutral-700">
+                                <button
+                                    type="button"
+                                    onClick={toggleListening}
+                                    className={cn(
+                                        "p-1.5 rounded-md transition-all",
+                                        isListening ? "text-red-500 bg-red-50 dark:bg-red-900/20" : "text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+                                    )}
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">{isListening ? 'stop_circle' : 'mic'}</span>
+                                </button>
+
+                                <input
+                                    value={input}
+                                    onChange={e => setInput(e.target.value)}
+                                    placeholder="Message..."
+                                    className="flex-1 bg-transparent border-none outline-none text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 h-9"
+                                    disabled={isLoading}
+                                />
+
+                                <button
+                                    type="submit"
+                                    disabled={!input.trim() || isLoading}
+                                    className="p-1.5 rounded-md text-neutral-900 dark:text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">arrow_upward</span>
+                                </button>
+                            </form>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

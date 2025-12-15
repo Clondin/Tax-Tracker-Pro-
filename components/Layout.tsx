@@ -73,86 +73,27 @@ const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes =
             />
 
             {/* Top Header */}
-            <motion.header
-                initial={{ y: -100 }}
-                animate={{ y: 0 }}
-                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-                    scrolled
-                        ? 'glass shadow-lg shadow-black/20'
-                        : 'bg-transparent'
-                }`}
-            >
-                <div className="max-w-7xl mx-auto px-6 lg:px-8">
-                    <div className="h-20 flex items-center justify-between">
-                        {/* Logo */}
-                        <motion.div
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="flex items-center gap-3 cursor-pointer group"
-                            onClick={() => navigate('/')}
-                        >
-                            <div className="relative">
-                                <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent-cyan rounded-xl blur-lg opacity-50 group-hover:opacity-80 transition-opacity" />
-                                <div className="relative bg-gradient-to-br from-primary to-accent-cyan p-2.5 rounded-xl shadow-glow">
-                                    <span className="material-symbols-outlined text-white text-2xl">monitoring</span>
-                                </div>
-                            </div>
-                            <div>
-                                <span className="font-display font-bold text-xl tracking-tight text-white">
-                                    TaxTracker
-                                </span>
-                                <span className="font-display font-bold text-xl tracking-tight text-gradient ml-1">
-                                    Pro
-                                </span>
-                            </div>
-                        </motion.div>
+            <header className="sticky top-0 z-50 glass shadow-[var(--shadow-sm)]">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                    <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
+                        <div className="w-8 h-8 rounded-lg bg-neutral-900 dark:bg-white flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
+                            <span className="material-symbols-outlined text-white dark:text-neutral-900 text-[18px]">grid_view</span>
+                        </div>
+                        <span className="font-bold text-lg tracking-tight text-neutral-900 dark:text-white">
+                            TaxTracker<span className="text-neutral-400 dark:text-neutral-500 font-medium text-sm ml-1">Pro</span>
+                        </span>
+                    </div>
 
-                        {/* Desktop Nav */}
-                        <nav className="hidden lg:flex items-center">
-                            <div className="flex items-center gap-1 p-1.5 rounded-2xl glass-light">
-                                {navItems.map((item) => (
-                                    <motion.button
-                                        key={item.path}
-                                        onClick={() => navigate(item.path)}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
-                                            isActive(item.path)
-                                                ? 'text-white'
-                                                : 'text-zinc-400 hover:text-white'
-                                        }`}
-                                    >
-                                        {isActive(item.path) && (
-                                            <motion.div
-                                                layoutId="nav-pill"
-                                                className={`absolute inset-0 bg-gradient-to-r ${item.gradient} rounded-xl shadow-glow-sm`}
-                                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                            />
-                                        )}
-                                        <span className={`material-symbols-outlined text-[18px] relative z-10 ${isActive(item.path) ? 'filled' : ''}`}>
-                                            {item.icon}
-                                        </span>
-                                        <span className="relative z-10">{item.label}</span>
-                                    </motion.button>
-                                ))}
-                            </div>
-                        </nav>
-
-                        {/* Right Section */}
-                        <div className="flex items-center gap-3">
-                            {/* Taxometer */}
-                            {taxResult && location.pathname !== '/' && (
-                                <div className="hidden xl:block">
-                                    <Taxometer refund={taxResult.refund || 0} amountDue={taxResult.amountDue || 0} />
-                                </div>
-                            )}
-
-                            {/* Search Button */}
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setIsCommandPaletteOpen(true)}
-                                className="hidden md:flex items-center gap-3 px-4 py-2.5 rounded-xl glass-light text-sm text-zinc-400 hover:text-white transition-colors group"
+                    {/* Desktop Nav */}
+                    <nav className="hidden md:flex items-center gap-1">
+                        {navItems.map((item) => (
+                            <button
+                                key={item.path}
+                                onClick={() => navigate(item.path)}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(item.path)
+                                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+                                    : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                                    }`}
                             >
                                 <span className="material-symbols-outlined text-[18px] group-hover:text-primary transition-colors">search</span>
                                 <span className="text-zinc-500">Search...</span>
@@ -173,20 +114,22 @@ const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes =
                                 </span>
                             </motion.button>
 
-                            {/* User Avatar */}
-                            <motion.div
-                                whileHover={{ scale: 1.05 }}
-                                className="relative group cursor-pointer"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-br from-primary via-accent-cyan to-accent-pink rounded-full blur opacity-50 group-hover:opacity-80 transition-opacity" />
-                                <div className="relative h-10 w-10 rounded-full bg-gradient-to-br from-primary via-accent-cyan to-accent-pink p-[2px]">
-                                    <div className="h-full w-full rounded-full bg-surface-900 flex items-center justify-center">
-                                        <span className="text-sm font-bold text-white">
-                                            {taxPayer?.firstName?.[0] || 'J'}{taxPayer?.lastName?.[0] || 'D'}
-                                        </span>
-                                    </div>
-                                </div>
-                            </motion.div>
+                        {/* Command Palette Button */}
+                        <button
+                            onClick={() => setIsCommandPaletteOpen(true)}
+                            className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-sm text-text-muted hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                        >
+                            <span className="material-symbols-outlined text-[16px]">search</span>
+                            <kbd className="text-xs font-mono">⌘K</kbd>
+                        </button>
+
+                        <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-background-light dark:hover:bg-neutral-800 transition-colors text-text-muted hover:text-primary">
+                            <span className="material-symbols-outlined">
+                                {theme === 'light' ? 'dark_mode' : 'light_mode'}
+                            </span>
+                        </button>
+                        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                            {taxPayer?.firstName?.[0] || 'J'}{taxPayer?.lastName?.[0] || 'D'}
                         </div>
                     </div>
                 </div>

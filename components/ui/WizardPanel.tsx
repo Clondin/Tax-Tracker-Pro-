@@ -58,7 +58,7 @@ export const WizardPanel: React.FC<WizardPanelProps> = ({ isOpen, onClose, title
                             )}
                         >
                             {/* Header */}
-                            <div className="flex justify-between items-center p-6 border-b border-border-light dark:border-border-dark bg-neutral-50 dark:bg-neutral-900">
+                            <div className="flex justify-between items-center p-6 border-b border-border-light dark:border-border-dark bg-white dark:bg-card-dark">
                                 <h2 className="text-xl font-bold text-text-main dark:text-white">{title}</h2>
                                 <button
                                     onClick={onClose}

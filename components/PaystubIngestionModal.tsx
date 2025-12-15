@@ -78,7 +78,7 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
         try {
             setAiState('uploading');
             setErrorMsg('');
-            
+
             // Convert file to base64
             const base64Data = await new Promise<string>((resolve, reject) => {
                 const reader = new FileReader();
@@ -98,8 +98,16 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
             });
 
             if (!response.ok) {
-                const errorBody = await response.json().catch(() => ({}));
-                throw new Error(errorBody.error || 'Failed to process paystub');
+                let errorDetails = `Status: ${response.status} ${response.statusText}`;
+                try {
+                    const errorBody = await response.json();
+                    if (errorBody.error) errorDetails = errorBody.error;
+                    else if (errorBody.content) errorDetails = errorBody.content;
+                } catch (e) {
+                    const text = await response.text();
+                    if (text) errorDetails += ` - ${text.substring(0, 100)}`;
+                }
+                throw new Error(errorDetails);
             }
 
             const { data } = await response.json();
@@ -143,10 +151,10 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
             }));
 
             setAiState('complete');
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             setAiState('error');
-            setErrorMsg("Failed to process paystub. This may be due to browser limitations or API key issues.");
+            setErrorMsg(err.message || "Failed to process paystub.");
         }
     };
 
@@ -161,17 +169,17 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <div className="bg-card-light dark:bg-card-dark w-full max-w-6xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-                
+
                 {/* Header */}
                 <div className="p-6 border-b border-border-light dark:border-neutral-800 flex justify-between items-center bg-background-light dark:bg-neutral-900">
                     <div>
-                         <h2 className="text-2xl font-bold flex items-center gap-2">
+                        <h2 className="text-2xl font-bold flex items-center gap-2">
                             <span className="material-symbols-outlined text-purple-600">document_scanner</span>
                             {isEditMode ? 'Edit Paystub Details' : 'Paystub Intelligence'}
-                         </h2>
-                         <p className="text-sm text-neutral-500">
-                             {isEditMode ? 'Review and adjust the extracted payroll data.' : 'Upload a paystub to automatically extract earnings, taxes, and deductions.'}
-                         </p>
+                        </h2>
+                        <p className="text-sm text-neutral-500">
+                            {isEditMode ? 'Review and adjust the extracted payroll data.' : 'Upload a paystub to automatically extract earnings, taxes, and deductions.'}
+                        </p>
                     </div>
                     <button onClick={onClose} className="size-8 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-800 flex items-center justify-center">
                         <span className="material-symbols-outlined">close</span>
@@ -182,19 +190,18 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
                     {/* Sidebar Nav */}
                     <div className="w-64 border-r border-border-light dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-4 flex flex-col gap-2 overflow-y-auto">
                         <div className="mb-6">
-                             <input 
-                                type="file" 
-                                ref={fileInputRef} 
-                                onChange={handleFileSelect} 
-                                className="hidden" 
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileSelect}
+                                className="hidden"
                                 accept=".pdf,.png,.jpg,.jpeg"
                             />
-                            <button 
+                            <button
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={aiState === 'uploading' || aiState === 'processing'}
-                                className={`w-full py-3 text-white rounded-xl font-bold flex flex-col items-center gap-1 shadow-lg transition-all ${
-                                    aiState === 'processing' ? 'bg-neutral-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
-                                }`}
+                                className={`w-full py-3 text-white rounded-xl font-bold flex flex-col items-center gap-1 shadow-lg transition-all ${aiState === 'processing' ? 'bg-neutral-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
+                                    }`}
                             >
                                 {aiState === 'uploading' || aiState === 'processing' ? (
                                     <>
@@ -221,11 +228,10 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
                                 <button
                                     key={item.id}
                                     onClick={() => setActiveSection(item.id)}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all ${
-                                        activeSection === item.id 
-                                        ? 'bg-white dark:bg-neutral-800 text-primary dark:text-white shadow-sm' 
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all ${activeSection === item.id
+                                        ? 'bg-white dark:bg-neutral-800 text-primary dark:text-white shadow-sm'
                                         : 'text-neutral-500 hover:bg-white/50 dark:hover:bg-neutral-800/50'
-                                    }`}
+                                        }`}
                                 >
                                     <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
                                     {item.label}
@@ -234,29 +240,29 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
                         </div>
 
                         <div className="mt-auto pt-4 border-t border-border-light dark:border-neutral-800">
-                             <div className="flex justify-between text-xs mb-1">
-                                 <span className="text-neutral-500">Gross</span>
-                                 <span className="font-bold">${stub.grossPayCurrent.toLocaleString()}</span>
-                             </div>
-                             <div className="flex justify-between text-xs mb-1 text-red-500">
-                                 <span>Taxes</span>
-                                 <span>-${stub.taxes.reduce((s,t) => s+t.amountCurrent,0).toLocaleString()}</span>
-                             </div>
-                             <div className="flex justify-between text-sm font-black pt-2 border-t border-dashed border-neutral-300 dark:border-neutral-700">
-                                 <span>Net Pay</span>
-                                 <span>${stub.netPayCurrent.toLocaleString()}</span>
-                             </div>
+                            <div className="flex justify-between text-xs mb-1">
+                                <span className="text-neutral-500">Gross</span>
+                                <span className="font-bold">${stub.grossPayCurrent.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-xs mb-1 text-red-500">
+                                <span>Taxes</span>
+                                <span>-${stub.taxes.reduce((s, t) => s + t.amountCurrent, 0).toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-sm font-black pt-2 border-t border-dashed border-neutral-300 dark:border-neutral-700">
+                                <span>Net Pay</span>
+                                <span>${stub.netPayCurrent.toLocaleString()}</span>
+                            </div>
                         </div>
                     </div>
 
                     {/* Main Content */}
                     <div className="flex-1 p-8 overflow-y-auto bg-card-light dark:bg-card-dark">
                         {(aiState === 'idle' && !isEditMode && stub.earnings.length === 0) && (
-                             <div className="h-full flex flex-col items-center justify-center text-center opacity-50">
-                                 <span className="material-symbols-outlined text-6xl mb-4">upload_file</span>
-                                 <h3 className="text-xl font-bold">Upload a Paystub to Begin</h3>
-                                 <p>We'll extract the data automatically.</p>
-                             </div>
+                            <div className="h-full flex flex-col items-center justify-center text-center opacity-50">
+                                <span className="material-symbols-outlined text-6xl mb-4">upload_file</span>
+                                <h3 className="text-xl font-bold">Upload a Paystub to Begin</h3>
+                                <p>We'll extract the data automatically.</p>
+                            </div>
                         )}
 
                         {/* Force show sections if we have data (edit mode or after scan) */}
@@ -266,15 +272,15 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-neutral-500 uppercase">Employer</label>
-                                        <input value={stub.metadata.employerName} onChange={e => setStub({...stub, metadata: {...stub.metadata, employerName: e.target.value}})} className="w-full p-3 rounded-lg border dark:bg-neutral-900 dark:border-neutral-700" />
+                                        <input value={stub.metadata.employerName} onChange={e => setStub({ ...stub, metadata: { ...stub.metadata, employerName: e.target.value } })} className="w-full p-3 rounded-lg border dark:bg-neutral-900 dark:border-neutral-700" />
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-neutral-500 uppercase">Pay Date</label>
-                                        <input type="date" value={stub.metadata.payDate} onChange={e => setStub({...stub, metadata: {...stub.metadata, payDate: e.target.value}})} className="w-full p-3 rounded-lg border dark:bg-neutral-900 dark:border-neutral-700" />
+                                        <input type="date" value={stub.metadata.payDate} onChange={e => setStub({ ...stub, metadata: { ...stub.metadata, payDate: e.target.value } })} className="w-full p-3 rounded-lg border dark:bg-neutral-900 dark:border-neutral-700" />
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-neutral-500 uppercase">Frequency</label>
-                                        <select value={stub.metadata.payFrequency} onChange={e => setStub({...stub, metadata: {...stub.metadata, payFrequency: e.target.value as any}})} className="w-full p-3 rounded-lg border dark:bg-neutral-900 dark:border-neutral-700">
+                                        <select value={stub.metadata.payFrequency} onChange={e => setStub({ ...stub, metadata: { ...stub.metadata, payFrequency: e.target.value as any } })} className="w-full p-3 rounded-lg border dark:bg-neutral-900 dark:border-neutral-700">
                                             <option value="weekly">Weekly</option>
                                             <option value="biweekly">Bi-Weekly</option>
                                             <option value="semimonthly">Semi-Monthly</option>
@@ -283,68 +289,68 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-xs font-bold text-neutral-500 uppercase">State</label>
-                                        <input value={stub.metadata.stateOfEmployment} onChange={e => setStub({...stub, metadata: {...stub.metadata, stateOfEmployment: e.target.value}})} className="w-full p-3 rounded-lg border dark:bg-neutral-900 dark:border-neutral-700" maxLength={2} />
+                                        <input value={stub.metadata.stateOfEmployment} onChange={e => setStub({ ...stub, metadata: { ...stub.metadata, stateOfEmployment: e.target.value } })} className="w-full p-3 rounded-lg border dark:bg-neutral-900 dark:border-neutral-700" maxLength={2} />
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         {activeSection === 'earnings' && (
-                             <div className="space-y-4 animate-in fade-in">
+                            <div className="space-y-4 animate-in fade-in">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-xl font-bold">Earnings</h3>
-                                    <button onClick={() => setStub(s => ({...s, earnings: [...s.earnings, { id: Math.random().toString(), description: '', type: 'regular', amountCurrent: 0, amountYTD: 0, isTaxableFed: true, isTaxableSS: true, isTaxableMed: true, isTaxableState: true }]}))} className="text-xs bg-primary text-white px-3 py-1 rounded">Add</button>
+                                    <button onClick={() => setStub(s => ({ ...s, earnings: [...s.earnings, { id: Math.random().toString(), description: '', type: 'regular', amountCurrent: 0, amountYTD: 0, isTaxableFed: true, isTaxableSS: true, isTaxableMed: true, isTaxableState: true }] }))} className="text-xs bg-primary text-white px-3 py-1 rounded">Add</button>
                                 </div>
                                 {stub.earnings.map((row, idx) => (
                                     <div key={row.id} className="grid grid-cols-12 gap-2 items-center p-3 border rounded-lg bg-neutral-50 dark:bg-neutral-800/30 border-border-light dark:border-neutral-700">
-                                        <div className="col-span-5"><input value={row.description} onChange={e => { const n = [...stub.earnings]; n[idx].description = e.target.value; setStub({...stub, earnings: n}); }} className="w-full bg-transparent font-medium" placeholder="Description" /></div>
-                                        <div className="col-span-3"><input type="number" value={row.amountCurrent} onChange={e => { const n = [...stub.earnings]; n[idx].amountCurrent = parseFloat(e.target.value); setStub({...stub, earnings: n}); }} className="w-full bg-transparent font-bold text-green-600" placeholder="Curr" /></div>
-                                        <div className="col-span-3"><input type="number" value={row.amountYTD} onChange={e => { const n = [...stub.earnings]; n[idx].amountYTD = parseFloat(e.target.value); setStub({...stub, earnings: n}); }} className="w-full bg-transparent text-neutral-500" placeholder="YTD" /></div>
-                                        <div className="col-span-1 text-right"><button onClick={() => setStub({...stub, earnings: stub.earnings.filter(e => e.id !== row.id)})} className="text-red-500">×</button></div>
+                                        <div className="col-span-5"><input value={row.description} onChange={e => { const n = [...stub.earnings]; n[idx].description = e.target.value; setStub({ ...stub, earnings: n }); }} className="w-full bg-transparent font-medium" placeholder="Description" /></div>
+                                        <div className="col-span-3"><input type="number" value={row.amountCurrent} onChange={e => { const n = [...stub.earnings]; n[idx].amountCurrent = parseFloat(e.target.value); setStub({ ...stub, earnings: n }); }} className="w-full bg-transparent font-bold text-green-600" placeholder="Curr" /></div>
+                                        <div className="col-span-3"><input type="number" value={row.amountYTD} onChange={e => { const n = [...stub.earnings]; n[idx].amountYTD = parseFloat(e.target.value); setStub({ ...stub, earnings: n }); }} className="w-full bg-transparent text-neutral-500" placeholder="YTD" /></div>
+                                        <div className="col-span-1 text-right"><button onClick={() => setStub({ ...stub, earnings: stub.earnings.filter(e => e.id !== row.id) })} className="text-red-500">×</button></div>
                                     </div>
                                 ))}
-                             </div>
+                            </div>
                         )}
 
                         {activeSection === 'taxes' && (
-                             <div className="space-y-4 animate-in fade-in">
+                            <div className="space-y-4 animate-in fade-in">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-xl font-bold">Taxes</h3>
-                                    <button onClick={() => setStub(s => ({...s, taxes: [...s.taxes, { id: Math.random().toString(), authority: 'federal', type: 'other', description: '', amountCurrent: 0, amountYTD: 0 }]}))} className="text-xs bg-primary text-white px-3 py-1 rounded">Add</button>
+                                    <button onClick={() => setStub(s => ({ ...s, taxes: [...s.taxes, { id: Math.random().toString(), authority: 'federal', type: 'other', description: '', amountCurrent: 0, amountYTD: 0 }] }))} className="text-xs bg-primary text-white px-3 py-1 rounded">Add</button>
                                 </div>
                                 {stub.taxes.map((row, idx) => (
                                     <div key={row.id} className="grid grid-cols-12 gap-2 items-center p-3 border rounded-lg bg-neutral-50 dark:bg-neutral-800/30 border-border-light dark:border-neutral-700">
-                                        <div className="col-span-5"><input value={row.description} onChange={e => { const n = [...stub.taxes]; n[idx].description = e.target.value; setStub({...stub, taxes: n}); }} className="w-full bg-transparent font-medium" placeholder="Tax Name" /></div>
-                                        <div className="col-span-3"><input type="number" value={row.amountCurrent} onChange={e => { const n = [...stub.taxes]; n[idx].amountCurrent = parseFloat(e.target.value); setStub({...stub, taxes: n}); }} className="w-full bg-transparent font-bold text-red-600" placeholder="Curr" /></div>
-                                        <div className="col-span-3"><input type="number" value={row.amountYTD} onChange={e => { const n = [...stub.taxes]; n[idx].amountYTD = parseFloat(e.target.value); setStub({...stub, taxes: n}); }} className="w-full bg-transparent text-neutral-500" placeholder="YTD" /></div>
-                                        <div className="col-span-1 text-right"><button onClick={() => setStub({...stub, taxes: stub.taxes.filter(t => t.id !== row.id)})} className="text-red-500">×</button></div>
+                                        <div className="col-span-5"><input value={row.description} onChange={e => { const n = [...stub.taxes]; n[idx].description = e.target.value; setStub({ ...stub, taxes: n }); }} className="w-full bg-transparent font-medium" placeholder="Tax Name" /></div>
+                                        <div className="col-span-3"><input type="number" value={row.amountCurrent} onChange={e => { const n = [...stub.taxes]; n[idx].amountCurrent = parseFloat(e.target.value); setStub({ ...stub, taxes: n }); }} className="w-full bg-transparent font-bold text-red-600" placeholder="Curr" /></div>
+                                        <div className="col-span-3"><input type="number" value={row.amountYTD} onChange={e => { const n = [...stub.taxes]; n[idx].amountYTD = parseFloat(e.target.value); setStub({ ...stub, taxes: n }); }} className="w-full bg-transparent text-neutral-500" placeholder="YTD" /></div>
+                                        <div className="col-span-1 text-right"><button onClick={() => setStub({ ...stub, taxes: stub.taxes.filter(t => t.id !== row.id) })} className="text-red-500">×</button></div>
                                     </div>
                                 ))}
-                             </div>
+                            </div>
                         )}
 
                         {activeSection === 'deductions' && (
-                             <div className="space-y-4 animate-in fade-in">
+                            <div className="space-y-4 animate-in fade-in">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-xl font-bold">Deductions</h3>
-                                    <button onClick={() => setStub(s => ({...s, deductions: [...s.deductions, { id: Math.random().toString(), description: '', type: 'pre_tax', category: 'other', amountCurrent: 0, amountYTD: 0, reducesFed: true, reducesSS: false, reducesMed: false, reducesState: true }]}))} className="text-xs bg-primary text-white px-3 py-1 rounded">Add</button>
+                                    <button onClick={() => setStub(s => ({ ...s, deductions: [...s.deductions, { id: Math.random().toString(), description: '', type: 'pre_tax', category: 'other', amountCurrent: 0, amountYTD: 0, reducesFed: true, reducesSS: false, reducesMed: false, reducesState: true }] }))} className="text-xs bg-primary text-white px-3 py-1 rounded">Add</button>
                                 </div>
                                 {stub.deductions.map((row, idx) => (
                                     <div key={row.id} className="grid grid-cols-12 gap-2 items-center p-3 border rounded-lg bg-neutral-50 dark:bg-neutral-800/30 border-border-light dark:border-neutral-700">
-                                        <div className="col-span-4"><input value={row.description} onChange={e => { const n = [...stub.deductions]; n[idx].description = e.target.value; setStub({...stub, deductions: n}); }} className="w-full bg-transparent font-medium" placeholder="Deduction" /></div>
+                                        <div className="col-span-4"><input value={row.description} onChange={e => { const n = [...stub.deductions]; n[idx].description = e.target.value; setStub({ ...stub, deductions: n }); }} className="w-full bg-transparent font-medium" placeholder="Deduction" /></div>
                                         <div className="col-span-2">
-                                            <select value={row.category} onChange={e => { const n = [...stub.deductions]; n[idx].category = e.target.value as any; setStub({...stub, deductions: n}); }} className="w-full bg-transparent text-xs">
+                                            <select value={row.category} onChange={e => { const n = [...stub.deductions]; n[idx].category = e.target.value as any; setStub({ ...stub, deductions: n }); }} className="w-full bg-transparent text-xs">
                                                 <option value="health">Health</option>
                                                 <option value="401k">401k</option>
                                                 <option value="other">Other</option>
                                             </select>
                                         </div>
-                                        <div className="col-span-2"><input type="number" value={row.amountCurrent} onChange={e => { const n = [...stub.deductions]; n[idx].amountCurrent = parseFloat(e.target.value); setStub({...stub, deductions: n}); }} className="w-full bg-transparent font-bold text-orange-600" placeholder="Curr" /></div>
-                                        <div className="col-span-3"><input type="number" value={row.amountYTD} onChange={e => { const n = [...stub.deductions]; n[idx].amountYTD = parseFloat(e.target.value); setStub({...stub, deductions: n}); }} className="w-full bg-transparent text-neutral-500" placeholder="YTD" /></div>
-                                        <div className="col-span-1 text-right"><button onClick={() => setStub({...stub, deductions: stub.deductions.filter(d => d.id !== row.id)})} className="text-red-500">×</button></div>
+                                        <div className="col-span-2"><input type="number" value={row.amountCurrent} onChange={e => { const n = [...stub.deductions]; n[idx].amountCurrent = parseFloat(e.target.value); setStub({ ...stub, deductions: n }); }} className="w-full bg-transparent font-bold text-orange-600" placeholder="Curr" /></div>
+                                        <div className="col-span-3"><input type="number" value={row.amountYTD} onChange={e => { const n = [...stub.deductions]; n[idx].amountYTD = parseFloat(e.target.value); setStub({ ...stub, deductions: n }); }} className="w-full bg-transparent text-neutral-500" placeholder="YTD" /></div>
+                                        <div className="col-span-1 text-right"><button onClick={() => setStub({ ...stub, deductions: stub.deductions.filter(d => d.id !== row.id) })} className="text-red-500">×</button></div>
                                     </div>
                                 ))}
-                             </div>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -354,7 +360,7 @@ const PaystubIngestionModal: React.FC<PaystubIngestionModalProps> = ({ onSave, o
                     <button onClick={onClose} className="px-6 py-3 font-bold text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded-xl transition-colors">
                         Cancel
                     </button>
-                    <button 
+                    <button
                         onClick={handleSave}
                         className="px-8 py-3 bg-primary hover:bg-neutral-800 dark:bg-white dark:text-primary dark:hover:bg-neutral-200 text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-1"
                     >

@@ -6,6 +6,7 @@ import { IncomeItem, TaxResult, TaxPayer, Paystub } from '../types';
 import PaystubIngestionModal from '../components/PaystubIngestionModal';
 import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { WizardPanel } from '../components/ui/WizardPanel';
+import { GuideTip } from '../components/ui/GuideTip';
 import { cn } from '../lib/utils';
 
 interface IncomePageProps {
@@ -209,7 +210,7 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                 )}
             </div>
 
-            {/* Income Type Cards */}
+            {/* Income Type Cards - Full Width */}
             <div>
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">
                     Select Income Type
@@ -279,7 +280,7 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                             {['primary', 'spouse'].map(owner => (
                                 <button
                                     key={owner}
-                                    onClick={() => setForm({ ...form, owner })}
+                                    onClick={() => setForm({ ...form, owner: owner as 'primary' | 'spouse' })}
                                     className={cn(
                                         "flex-1 py-3 rounded-lg text-sm font-bold transition-all",
                                         form.owner === owner
@@ -382,7 +383,43 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                     >
                         <span className="material-symbols-outlined">check</span>
                         {editingId ? 'Save Changes' : 'Add Income'}
-                    </motion.button>
+                    </button>
+
+                    {/* Contextual Tips */}
+                    <div className="pt-6 border-t border-border-light dark:border-neutral-800">
+                        {activeCategory === 'W-2' && (
+                            <GuideTip
+                                title="W-2 vs 1099?"
+                                content="W-2 is for employees (taxes withheld). If you are a contractor, use the 'Self-Employment' category instead."
+                                icon="help"
+                                variant="highlight"
+                            />
+                        )}
+                        {activeCategory === 'Business' && (
+                            <GuideTip
+                                title="Deduct Your Expenses!"
+                                content="You can deduct software, home office, and supplies. Keep your receipts! Net profit is what gets taxed."
+                                icon="receipt_long"
+                                variant="highlight"
+                            />
+                        )}
+                        {activeCategory === 'Investment' && (
+                            <GuideTip
+                                title="Crypto & Stock Sales"
+                                content="Sold assets? You only pay tax on the *profit*. Losses can offset gains and up to $3,000 of other income."
+                                icon="trending_up"
+                                variant="highlight"
+                            />
+                        )}
+                        {activeCategory === 'Rental' && (
+                            <GuideTip
+                                title="Depreciation is Key"
+                                content="You can deduct the 'wear and tear' of the building value (Depreciation) even if you didn't pay cash this year."
+                                icon="apartment"
+                                variant="highlight"
+                            />
+                        )}
+                    </div>
                 </div>
             </WizardPanel>
 

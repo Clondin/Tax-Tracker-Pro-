@@ -27,9 +27,9 @@ export default async function handler(req, res) {
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-        const prompt = `Parse this receipt. Return JSON only:
+        const prompt = `Parse this receipt. Return RAW JSON only. Do not use markdown code blocks.
 {"vendor": "Store Name", "date": "2024-12-15", "total": 45.99, "category": "other", "description": "Purchase"}
 Categories: charity, medical, business, other. Use null if unknown.`;
 
