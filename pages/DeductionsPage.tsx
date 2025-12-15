@@ -14,11 +14,11 @@ interface DeductionsPageProps {
 
 type DeductionCategory = 'health' | 'home' | 'charity' | 'credits';
 
-const DEDUCTION_CATEGORIES: { id: DeductionCategory; label: string; subtitle: string; icon: string; color: string; bgColor: string; borderColor: string }[] = [
-    { id: 'health', label: 'Health & FSA', subtitle: 'HSA, medical expenses', icon: 'medical_services', color: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-50 dark:bg-rose-900/20', borderColor: 'border-rose-500' },
-    { id: 'home', label: 'Mortgage & Home', subtitle: 'Interest, property tax', icon: 'home', color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-50 dark:bg-blue-900/20', borderColor: 'border-blue-500' },
-    { id: 'charity', label: 'Charitable Giving', subtitle: 'Cash & non-cash donations', icon: 'volunteer_activism', color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-50 dark:bg-purple-900/20', borderColor: 'border-purple-500' },
-    { id: 'credits', label: 'Energy & Credits', subtitle: 'Solar, EV, adoption', icon: 'bolt', color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-50 dark:bg-amber-900/20', borderColor: 'border-amber-500' },
+const DEDUCTION_CATEGORIES: { id: DeductionCategory; label: string; subtitle: string; icon: string; gradient: string }[] = [
+    { id: 'health', label: 'Health & FSA', subtitle: 'HSA, medical expenses', icon: 'medical_services', gradient: 'from-rose-500 to-pink-500' },
+    { id: 'home', label: 'Mortgage & Home', subtitle: 'Interest, property tax', icon: 'home', gradient: 'from-blue-500 to-cyan-500' },
+    { id: 'charity', label: 'Charitable Giving', subtitle: 'Cash & non-cash donations', icon: 'volunteer_activism', gradient: 'from-violet-500 to-purple-500' },
+    { id: 'credits', label: 'Energy & Credits', subtitle: 'Solar, EV, adoption', icon: 'bolt', gradient: 'from-amber-500 to-orange-500' },
 ];
 
 const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductions, taxResult }) => {
@@ -81,7 +81,6 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
         if (editingId === id) resetForm();
     };
 
-    // AI Receipt Scanner
     const handleFileDrop = useCallback(async (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragging(false);
@@ -322,11 +321,11 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                 <div className="space-y-8 pb-10">
                     {/* Description */}
                     <div>
-                        <label className="text-xs font-bold text-text-muted block mb-1.5 uppercase tracking-wide">Description</label>
+                        <label className="text-xs font-bold text-zinc-400 block mb-2 uppercase tracking-widest">Description</label>
                         <input
                             value={form.description}
                             onChange={e => setForm({ ...form, description: e.target.value })}
-                            className="w-full rounded-xl bg-white dark:bg-neutral-900 border-2 border-border-light dark:border-neutral-700 px-4 py-3 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-lg"
+                            className="w-full rounded-xl border-2 border-white/10 bg-white/5 px-5 py-4 outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 text-lg font-medium text-white placeholder-zinc-600 transition-all"
                             placeholder="e.g. ABC Hospital"
                             autoFocus
                         />
@@ -336,11 +335,11 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                     {activeCategory === 'health' && (
                         <div className="space-y-6">
                             <div>
-                                <label className="text-xs font-bold text-text-muted block mb-1.5 uppercase tracking-wide">Type</label>
+                                <label className="text-xs font-bold text-zinc-400 block mb-2 uppercase tracking-widest">Type</label>
                                 <select
                                     value={form.category}
                                     onChange={e => setForm(f => ({ ...f, category: e.target.value as any }))}
-                                    className="w-full rounded-xl bg-white dark:bg-neutral-900 border-2 border-border-light dark:border-neutral-700 px-4 py-3 outline-none focus:border-primary transition-all"
+                                    className="w-full rounded-xl border-2 border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-primary text-white transition-all"
                                 >
                                     <option value="hsa_contrib">HSA Contribution</option>
                                     <option value="medical">Medical Expense</option>
@@ -354,11 +353,11 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                     {activeCategory === 'home' && (
                         <div className="space-y-6">
                             <div>
-                                <label className="text-xs font-bold text-text-muted block mb-1.5 uppercase tracking-wide">Type</label>
+                                <label className="text-xs font-bold text-zinc-400 block mb-2 uppercase tracking-widest">Type</label>
                                 <select
                                     value={form.category}
                                     onChange={e => setForm(f => ({ ...f, category: e.target.value as any }))}
-                                    className="w-full rounded-xl bg-white dark:bg-neutral-900 border-2 border-border-light dark:border-neutral-700 px-4 py-3 outline-none focus:border-primary transition-all"
+                                    className="w-full rounded-xl border-2 border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-primary text-white transition-all"
                                 >
                                     <option value="mortgage">Mortgage Interest (1098)</option>
                                     <option value="property_tax">Property Tax</option>
@@ -372,11 +371,11 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                     {activeCategory === 'charity' && (
                         <div className="space-y-6">
                             <div>
-                                <label className="text-xs font-bold text-text-muted block mb-1.5 uppercase tracking-wide">Type</label>
+                                <label className="text-xs font-bold text-zinc-400 block mb-2 uppercase tracking-widest">Type</label>
                                 <select
                                     value={form.category}
                                     onChange={e => setForm(f => ({ ...f, category: e.target.value as any }))}
-                                    className="w-full rounded-xl bg-white dark:bg-neutral-900 border-2 border-border-light dark:border-neutral-700 px-4 py-3 outline-none focus:border-primary transition-all"
+                                    className="w-full rounded-xl border-2 border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-primary text-white transition-all"
                                 >
                                     <option value="charity_cash">Cash Donation</option>
                                     <option value="charity_noncash">Non-Cash (Goods)</option>
@@ -389,11 +388,11 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                     {activeCategory === 'credits' && (
                         <div className="space-y-6">
                             <div>
-                                <label className="text-xs font-bold text-text-muted block mb-1.5 uppercase tracking-wide">Credit Type</label>
+                                <label className="text-xs font-bold text-zinc-400 block mb-2 uppercase tracking-widest">Credit Type</label>
                                 <select
                                     value={form.category}
                                     onChange={e => setForm(f => ({ ...f, category: e.target.value as any }))}
-                                    className="w-full rounded-xl bg-white dark:bg-neutral-900 border-2 border-border-light dark:border-neutral-700 px-4 py-3 outline-none focus:border-primary transition-all"
+                                    className="w-full rounded-xl border-2 border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-primary text-white transition-all"
                                 >
                                     <option value="energy_credit">Residential Energy (Solar)</option>
                                     <option value="ev_credit">EV Credit</option>
@@ -404,9 +403,11 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                         </div>
                     )}
 
-                    <button
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={handleSave}
-                        className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/25 transition-all hover:-translate-y-1 hover:shadow-xl flex items-center justify-center gap-2"
+                        className="w-full bg-gradient-to-r from-primary via-accent-cyan to-accent-pink text-white font-bold py-4 rounded-xl shadow-glow-sm transition-all flex items-center justify-center gap-2"
                     >
                         <span className="material-symbols-outlined">check</span>
                         {editingId ? 'Save Changes' : 'Add Deduction'}
@@ -445,10 +446,10 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
             {/* Deductions List */}
             {deductions.length > 0 ? (
                 <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-text-main dark:text-white">Your Deductions</h3>
+                    <h3 className="text-lg font-display font-bold text-white">Your Deductions</h3>
                     <div className="grid gap-3">
                         <AnimatePresence>
-                            {deductions.map(item => {
+                            {deductions.map((item, i) => {
                                 const catStyle = getCategoryStyle(getCategoryForItem(item));
                                 return (
                                     <motion.div
@@ -456,32 +457,38 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, x: -20 }}
+                                        transition={{ delay: i * 0.05 }}
                                         onClick={() => handleEdit(item)}
-                                        className={`flex justify-between items-center p-5 rounded-xl border-l-4 glass-card cursor-pointer group ${catStyle?.borderColor}`}
+                                        className="flex justify-between items-center p-5 rounded-2xl glass-card cursor-pointer group hover:ring-1 hover:ring-primary/30 transition-all"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className={`p-2.5 rounded-xl ${catStyle?.bgColor}`}>
-                                                <span className={`material-symbols-outlined ${catStyle?.color}`}>{catStyle?.icon}</span>
+                                            <div className={cn(
+                                                "w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br",
+                                                catStyle?.gradient
+                                            )}>
+                                                <span className="material-symbols-outlined text-white">{catStyle?.icon}</span>
                                             </div>
                                             <div>
-                                                <div className="font-bold text-text-main dark:text-white flex items-center gap-2">
+                                                <div className="font-bold text-white flex items-center gap-2">
                                                     {item.description}
                                                     {item.details?.ai_scanned && (
-                                                        <span className="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-2 py-0.5 rounded-full font-medium">AI Scanned</span>
+                                                        <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-bold uppercase">AI Scanned</span>
                                                     )}
-                                                    <span className="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity text-text-muted">edit</span>
+                                                    <span className="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity text-zinc-500">edit</span>
                                                 </div>
-                                                <div className="text-xs text-text-muted uppercase mt-1">{item.category.replace('_', ' ')}</div>
+                                                <div className="text-xs text-zinc-500 uppercase mt-1">{item.category.replace('_', ' ')}</div>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
-                                            <div className="font-bold text-xl text-text-main dark:text-white">${item.amount.toLocaleString()}</div>
-                                            <button
+                                            <div className="font-display font-bold text-xl text-white tabular-nums">${item.amount.toLocaleString()}</div>
+                                            <motion.button
+                                                whileHover={{ scale: 1.1 }}
+                                                whileTap={{ scale: 0.9 }}
                                                 onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
-                                                className="p-2 rounded-lg text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100"
+                                                className="p-2 rounded-lg text-zinc-500 hover:text-danger hover:bg-danger/10 transition-all opacity-0 group-hover:opacity-100"
                                             >
                                                 <span className="material-symbols-outlined">delete</span>
-                                            </button>
+                                            </motion.button>
                                         </div>
                                     </motion.div>
                                 );
@@ -490,13 +497,17 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                     </div>
                 </div>
             ) : (
-                <div className="text-center py-16 glass-card rounded-2xl border-2 border-dashed border-border-light dark:border-border-dark">
-                    <div className="p-4 bg-neutral-100 dark:bg-neutral-800 rounded-full inline-block mb-4">
-                        <span className="material-symbols-outlined text-4xl text-text-muted">receipt</span>
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center py-16 gradient-border rounded-2xl"
+                >
+                    <div className="p-4 bg-white/5 rounded-full inline-block mb-4">
+                        <span className="material-symbols-outlined text-4xl text-zinc-500">receipt</span>
                     </div>
-                    <h3 className="text-xl font-bold text-text-main dark:text-white mb-2">No deductions added yet</h3>
-                    <p className="text-text-muted max-w-md mx-auto">Select a deduction type above or drop a receipt to get started.</p>
-                </div>
+                    <h3 className="text-xl font-display font-bold text-white mb-2">No deductions added yet</h3>
+                    <p className="text-zinc-500 max-w-md mx-auto">Select a deduction type above or drop a receipt to get started.</p>
+                </motion.div>
             )}
         </div>
     );
