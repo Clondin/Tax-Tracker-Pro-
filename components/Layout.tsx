@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Chatbot } from './Chatbot';
 import { Taxometer } from './Taxometer';
 import { CommandPalette } from './CommandPalette';
@@ -18,18 +19,19 @@ const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes =
     const navigate = useNavigate();
     const location = useLocation();
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
 
-    // Ensure dark mode class is applied to html element
     useEffect(() => {
         const html = document.documentElement;
-        if (theme === 'dark') {
-            html.classList.add('dark');
-        } else {
-            html.classList.remove('dark');
-        }
+        html.classList.add('dark');
     }, [theme]);
 
-    // Cmd+K listener
+    useEffect(() => {
+        const handleScroll = () => setScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
             e.preventDefault();
@@ -45,94 +47,213 @@ const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes =
     const isActive = (path: string) => location.pathname === path;
 
     const navItems = [
-        { path: '/', label: 'Setup', icon: 'settings_account_box' },
-        { path: '/income', label: 'Income', icon: 'attach_money' },
-        { path: '/deductions', label: 'Deductions', icon: 'receipt_long' },
-        { path: '/summary', label: 'Summary', icon: 'assessment' },
-        { path: '/documents', label: 'Documents', icon: 'folder_open' },
+        { path: '/', label: 'Setup', icon: 'settings_account_box', gradient: 'from-violet-500 to-purple-500' },
+        { path: '/income', label: 'Income', icon: 'payments', gradient: 'from-cyan-500 to-blue-500' },
+        { path: '/deductions', label: 'Deductions', icon: 'receipt_long', gradient: 'from-emerald-500 to-teal-500' },
+        { path: '/summary', label: 'Summary', icon: 'analytics', gradient: 'from-pink-500 to-rose-500' },
+        { path: '/documents', label: 'Documents', icon: 'folder_open', gradient: 'from-amber-500 to-orange-500' },
     ];
 
     return (
-        <div className="min-h-screen flex flex-col font-display bg-background-light dark:bg-background-dark text-text-main dark:text-white transition-colors duration-200">
+        <div className="min-h-screen flex flex-col relative overflow-hidden">
+            {/* Animated background orbs */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="orb w-[600px] h-[600px] bg-primary/20 -top-48 -left-48 animate-float" />
+                <div className="orb w-[500px] h-[500px] bg-accent-cyan/15 top-1/3 -right-32 animate-float-slow" />
+                <div className="orb w-[400px] h-[400px] bg-accent-pink/15 -bottom-32 left-1/3 animate-float-slower" />
+            </div>
+
+            {/* Grid pattern overlay */}
+            <div className="fixed inset-0 pointer-events-none opacity-[0.02]"
+                style={{
+                    backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                                     linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+                    backgroundSize: '50px 50px'
+                }}
+            />
+
             {/* Top Header */}
-            <header className="sticky top-0 z-50 bg-white/80 dark:bg-card-dark/80 backdrop-blur-md border-b border-border-light dark:border-border-dark shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-                        <div className="bg-gradient-to-br from-primary to-primary-dark p-2 rounded-lg shadow-lg shadow-primary/20">
-                            <span className="material-symbols-outlined text-white text-xl">bar_chart</span>
-                        </div>
-                        <span className="font-bold text-xl tracking-tight">TaxTracker <span className="text-primary">Pro</span></span>
-                    </div>
-
-                    {/* Desktop Nav */}
-                    <nav className="hidden md:flex items-center gap-1">
-                        {navItems.map((item) => (
-                            <button
-                                key={item.path}
-                                onClick={() => navigate(item.path)}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(item.path)
-                                    ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-light'
-                                    : 'text-text-muted hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800'
-                                    }`}
-                            >
-                                <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
-                                <span>{item.label}</span>
-                            </button>
-                        ))}
-                    </nav>
-
-                    <div className="flex items-center gap-4">
-                        {/* Taxometer */}
-                        {taxResult && location.pathname !== '/' && (
-                            <div className="hidden lg:block">
-                                <Taxometer refund={taxResult.refund || 0} amountDue={taxResult.amountDue || 0} />
-                            </div>
-                        )}
-
-                        {/* Command Palette Button */}
-                        <button
-                            onClick={() => setIsCommandPaletteOpen(true)}
-                            className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-sm text-text-muted hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+            <motion.header
+                initial={{ y: -100 }}
+                animate={{ y: 0 }}
+                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+                    scrolled
+                        ? 'glass shadow-lg shadow-black/20'
+                        : 'bg-transparent'
+                }`}
+            >
+                <div className="max-w-7xl mx-auto px-6 lg:px-8">
+                    <div className="h-20 flex items-center justify-between">
+                        {/* Logo */}
+                        <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="flex items-center gap-3 cursor-pointer group"
+                            onClick={() => navigate('/')}
                         >
-                            <span className="material-symbols-outlined text-[16px]">search</span>
-                            <kbd className="text-xs font-mono">⌘K</kbd>
-                        </button>
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent-cyan rounded-xl blur-lg opacity-50 group-hover:opacity-80 transition-opacity" />
+                                <div className="relative bg-gradient-to-br from-primary to-accent-cyan p-2.5 rounded-xl shadow-glow">
+                                    <span className="material-symbols-outlined text-white text-2xl">monitoring</span>
+                                </div>
+                            </div>
+                            <div>
+                                <span className="font-display font-bold text-xl tracking-tight text-white">
+                                    TaxTracker
+                                </span>
+                                <span className="font-display font-bold text-xl tracking-tight text-gradient ml-1">
+                                    Pro
+                                </span>
+                            </div>
+                        </motion.div>
 
-                        <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-background-light dark:hover:bg-neutral-800 transition-colors text-text-muted hover:text-primary">
-                            <span className="material-symbols-outlined">
-                                {theme === 'light' ? 'dark_mode' : 'light_mode'}
-                            </span>
-                        </button>
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-secondary to-emerald-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-secondary/20">
-                            {taxPayer?.firstName?.[0] || 'J'}{taxPayer?.lastName?.[0] || 'D'}
+                        {/* Desktop Nav */}
+                        <nav className="hidden lg:flex items-center">
+                            <div className="flex items-center gap-1 p-1.5 rounded-2xl glass-light">
+                                {navItems.map((item) => (
+                                    <motion.button
+                                        key={item.path}
+                                        onClick={() => navigate(item.path)}
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+                                            isActive(item.path)
+                                                ? 'text-white'
+                                                : 'text-zinc-400 hover:text-white'
+                                        }`}
+                                    >
+                                        {isActive(item.path) && (
+                                            <motion.div
+                                                layoutId="nav-pill"
+                                                className={`absolute inset-0 bg-gradient-to-r ${item.gradient} rounded-xl shadow-glow-sm`}
+                                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                            />
+                                        )}
+                                        <span className={`material-symbols-outlined text-[18px] relative z-10 ${isActive(item.path) ? 'filled' : ''}`}>
+                                            {item.icon}
+                                        </span>
+                                        <span className="relative z-10">{item.label}</span>
+                                    </motion.button>
+                                ))}
+                            </div>
+                        </nav>
+
+                        {/* Right Section */}
+                        <div className="flex items-center gap-3">
+                            {/* Taxometer */}
+                            {taxResult && location.pathname !== '/' && (
+                                <div className="hidden xl:block">
+                                    <Taxometer refund={taxResult.refund || 0} amountDue={taxResult.amountDue || 0} />
+                                </div>
+                            )}
+
+                            {/* Search Button */}
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setIsCommandPaletteOpen(true)}
+                                className="hidden md:flex items-center gap-3 px-4 py-2.5 rounded-xl glass-light text-sm text-zinc-400 hover:text-white transition-colors group"
+                            >
+                                <span className="material-symbols-outlined text-[18px] group-hover:text-primary transition-colors">search</span>
+                                <span className="text-zinc-500">Search...</span>
+                                <kbd className="ml-2 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-xs font-mono text-zinc-500">
+                                    Ctrl K
+                                </kbd>
+                            </motion.button>
+
+                            {/* Theme Toggle */}
+                            <motion.button
+                                whileHover={{ scale: 1.1, rotate: 15 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={toggleTheme}
+                                className="p-2.5 rounded-xl glass-light text-zinc-400 hover:text-primary transition-colors"
+                            >
+                                <span className="material-symbols-outlined">
+                                    {theme === 'light' ? 'dark_mode' : 'light_mode'}
+                                </span>
+                            </motion.button>
+
+                            {/* User Avatar */}
+                            <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                className="relative group cursor-pointer"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-br from-primary via-accent-cyan to-accent-pink rounded-full blur opacity-50 group-hover:opacity-80 transition-opacity" />
+                                <div className="relative h-10 w-10 rounded-full bg-gradient-to-br from-primary via-accent-cyan to-accent-pink p-[2px]">
+                                    <div className="h-full w-full rounded-full bg-surface-900 flex items-center justify-center">
+                                        <span className="text-sm font-bold text-white">
+                                            {taxPayer?.firstName?.[0] || 'J'}{taxPayer?.lastName?.[0] || 'D'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </motion.div>
                         </div>
                     </div>
                 </div>
 
                 {/* Mobile Nav */}
-                <div className="md:hidden overflow-x-auto border-t border-border-light dark:border-border-dark bg-background-light dark:bg-neutral-900 scrollbar-hide">
-                    <div className="flex p-2 gap-2 min-w-max">
+                <div className="lg:hidden border-t border-white/5">
+                    <div className="flex overflow-x-auto p-2 gap-1 scrollbar-hide">
                         {navItems.map((item) => (
-                            <button
+                            <motion.button
                                 key={item.path}
                                 onClick={() => navigate(item.path)}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${isActive(item.path)
-                                    ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-light'
-                                    : 'text-text-muted hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800'
-                                    }`}
+                                whileTap={{ scale: 0.95 }}
+                                className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
+                                    isActive(item.path)
+                                        ? 'text-white'
+                                        : 'text-zinc-400'
+                                }`}
                             >
-                                <span className="material-symbols-outlined text-[16px]">{item.icon}</span>
-                                <span>{item.label}</span>
-                            </button>
+                                {isActive(item.path) && (
+                                    <motion.div
+                                        layoutId="mobile-nav-pill"
+                                        className={`absolute inset-0 bg-gradient-to-r ${item.gradient} rounded-xl`}
+                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    />
+                                )}
+                                <span className={`material-symbols-outlined text-[16px] relative z-10 ${isActive(item.path) ? 'filled' : ''}`}>
+                                    {item.icon}
+                                </span>
+                                <span className="relative z-10">{item.label}</span>
+                            </motion.button>
                         ))}
                     </div>
                 </div>
-            </header>
+            </motion.header>
 
             {/* Main Content */}
-            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {children}
+            <main className="flex-1 w-full max-w-7xl mx-auto px-6 lg:px-8 pt-32 pb-12 relative z-10">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={location.pathname}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        {children}
+                    </motion.div>
+                </AnimatePresence>
             </main>
+
+            {/* Footer */}
+            <footer className="relative z-10 border-t border-white/5 py-8">
+                <div className="max-w-7xl mx-auto px-6 lg:px-8">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center gap-2 text-sm text-zinc-500">
+                            <span className="material-symbols-outlined text-[16px]">security</span>
+                            <span>Bank-level encryption</span>
+                            <span className="mx-2">|</span>
+                            <span className="material-symbols-outlined text-[16px]">verified_user</span>
+                            <span>IRS Authorized</span>
+                        </div>
+                        <div className="text-sm text-zinc-600">
+                            2025 TaxTracker Pro. All rights reserved.
+                        </div>
+                    </div>
+                </div>
+            </footer>
 
             <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} />
             <Chatbot incomes={incomes} taxResult={taxResult} taxPayer={taxPayer} />
