@@ -17,11 +17,11 @@ interface IncomePageProps {
 
 type IncomeCategory = 'W-2' | 'Business' | 'Investment' | 'Rental';
 
-const INCOME_CATEGORIES: { id: IncomeCategory; label: string; subtitle: string; icon: string; color: string; bgColor: string; borderColor: string }[] = [
-    { id: 'W-2', label: 'W-2 Employment', subtitle: 'Wages, salaries, tips', icon: 'work', color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-50 dark:bg-indigo-900/20', borderColor: 'border-indigo-500' },
-    { id: 'Business', label: 'Self-Employment', subtitle: '1099-NEC, freelance', icon: 'storefront', color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-50 dark:bg-amber-900/20', borderColor: 'border-amber-500' },
-    { id: 'Investment', label: 'Investments', subtitle: 'Dividends, interest, gains', icon: 'trending_up', color: 'text-emerald-600 dark:text-emerald-400', bgColor: 'bg-emerald-50 dark:bg-emerald-900/20', borderColor: 'border-emerald-500' },
-    { id: 'Rental', label: 'Rental Property', subtitle: 'Real estate income', icon: 'home_work', color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-50 dark:bg-purple-900/20', borderColor: 'border-purple-500' },
+const INCOME_CATEGORIES: { id: IncomeCategory; label: string; subtitle: string; icon: string; gradient: string }[] = [
+    { id: 'W-2', label: 'W-2 Employment', subtitle: 'Wages, salaries, tips', icon: 'work', gradient: 'from-cyan-500 to-blue-500' },
+    { id: 'Business', label: 'Self-Employment', subtitle: '1099-NEC, freelance', icon: 'storefront', gradient: 'from-amber-500 to-orange-500' },
+    { id: 'Investment', label: 'Investments', subtitle: 'Dividends, interest, gains', icon: 'trending_up', gradient: 'from-emerald-500 to-teal-500' },
+    { id: 'Rental', label: 'Rental Property', subtitle: 'Real estate income', icon: 'home_work', gradient: 'from-violet-500 to-purple-500' },
 ];
 
 const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult, taxPayer }) => {
@@ -133,7 +133,6 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
 
     const getCategoryStyle = (cat: IncomeCategory) => INCOME_CATEGORIES.find(c => c.id === cat);
 
-    // Chart data
     const chartData = Array.from({ length: 52 }, (_, i) => i + 1).map(week => {
         let weeklyTotal = 0;
         incomes.forEach(inc => {
@@ -151,7 +150,7 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
     });
 
     return (
-        <div className="flex flex-col gap-8 h-full animate-in fade-in duration-500 pb-20">
+        <div className="flex flex-col gap-8 h-full pb-20">
             {showPaystubModal && (
                 <PaystubIngestionModal
                     onSave={handlePaystubImport}
@@ -161,51 +160,86 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
             )}
 
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2.5 bg-primary/10 rounded-xl">
-                            <span className="material-symbols-outlined text-primary text-2xl">payments</span>
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-3 mb-3"
+                    >
+                        <div className="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 shadow-glow-cyan">
+                            <span className="material-symbols-outlined text-white text-2xl">payments</span>
                         </div>
-                        <h1 className="text-3xl font-bold text-text-main dark:text-white">Income & Wages</h1>
-                    </div>
-                    <p className="text-text-muted ml-1">Add all your income sources for the tax year</p>
+                        <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                            Income Sources
+                        </span>
+                    </motion.div>
+                    <motion.h1
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="text-4xl md:text-5xl font-display font-bold text-white mb-2"
+                    >
+                        Income & Wages
+                    </motion.h1>
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-lg text-zinc-400"
+                    >
+                        Add all your income sources for the tax year
+                    </motion.p>
                 </div>
 
                 {incomes.length > 0 && (
-                    <div className="flex gap-4">
-                        <div className="glass-card rounded-xl px-5 py-3 border-l-4 border-l-emerald-500">
-                            <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">Total Income</div>
-                            <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">${totalIncome.toLocaleString()}</div>
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex gap-4"
+                    >
+                        <div className="glass-card rounded-2xl px-6 py-4 border-l-4 border-l-emerald-500">
+                            <div className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Total Income</div>
+                            <div className="text-2xl font-display font-bold text-white tabular-nums">${totalIncome.toLocaleString()}</div>
                         </div>
-                        <div className="glass-card rounded-xl px-5 py-3 border-l-4 border-l-blue-500">
-                            <div className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Withheld</div>
-                            <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">${totalWithholding.toLocaleString()}</div>
+                        <div className="glass-card rounded-2xl px-6 py-4 border-l-4 border-l-accent-cyan">
+                            <div className="text-xs font-bold text-accent-cyan uppercase tracking-widest">Withheld</div>
+                            <div className="text-2xl font-display font-bold text-white tabular-nums">${totalWithholding.toLocaleString()}</div>
                         </div>
-                    </div>
+                    </motion.div>
                 )}
             </div>
 
             {/* Income Type Cards */}
             <div>
-                <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block ml-1">Select Income Type</label>
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4 block">
+                    Select Income Type
+                </label>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    {INCOME_CATEGORIES.map(cat => (
+                    {INCOME_CATEGORIES.map((cat, i) => (
                         <motion.button
                             key={cat.id}
-                            whileHover={{ scale: 1.02, y: -2 }}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.1 }}
+                            whileHover={{ scale: 1.02, y: -4 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => selectCategory(cat.id)}
-                            className={cn(
-                                "relative group p-5 rounded-2xl border-2 text-left transition-all duration-300",
-                                "bg-white dark:bg-card-dark border-border-light dark:border-border-dark hover:border-neutral-300 dark:hover:border-neutral-600 hover:shadow-xl"
-                            )}
+                            className="relative group p-6 rounded-2xl glass-card text-left transition-all duration-300 overflow-hidden"
                         >
-                            <div className={`p-3 rounded-xl inline-block mb-3 transition-colors ${cat.bgColor}`}>
-                                <span className={`material-symbols-outlined text-2xl ${cat.color}`}>{cat.icon}</span>
+                            <div className={cn(
+                                "absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-gradient-to-br",
+                                cat.gradient
+                            )} />
+                            <div className="relative z-10">
+                                <div className={cn(
+                                    "w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-gradient-to-br",
+                                    cat.gradient
+                                )}>
+                                    <span className="material-symbols-outlined text-white text-xl">{cat.icon}</span>
+                                </div>
+                                <div className="font-display font-bold text-white mb-1">{cat.label}</div>
+                                <div className="text-xs text-zinc-500">{cat.subtitle}</div>
                             </div>
-                            <div className="font-bold text-text-main dark:text-white">{cat.label}</div>
-                            <div className="text-xs text-text-muted mt-0.5">{cat.subtitle}</div>
                         </motion.button>
                     ))}
                 </div>
@@ -220,36 +254,37 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                 <div className="space-y-8 pb-10">
                     {/* Auto-Scan Banner */}
                     {activeCategory === 'W-2' && (
-                        <div
+                        <motion.div
+                            whileHover={{ scale: 1.01 }}
                             onClick={() => { resetForm(); setShowPaystubModal(true); }}
-                            className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 text-white cursor-pointer hover:shadow-lg hover:scale-[1.01] transition-all relative overflow-hidden group"
+                            className="relative bg-gradient-to-r from-primary via-accent-cyan to-accent-pink rounded-2xl p-6 text-white cursor-pointer overflow-hidden group"
                         >
-                            <div className="absolute top-0 right-0 -mr-10 -mt-10 w-32 h-32 bg-white/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-accent-cyan via-accent-pink to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                             <div className="relative z-10 flex items-center gap-4">
                                 <div className="p-3 bg-white/20 backdrop-blur-md rounded-xl">
                                     <span className="material-symbols-outlined text-2xl">document_scanner</span>
                                 </div>
                                 <div>
-                                    <div className="font-bold text-lg">Auto-Scan Paystub</div>
-                                    <div className="text-indigo-100 text-sm">Upload a PDF or image to instantly fill this form</div>
+                                    <div className="font-display font-bold text-lg">Auto-Scan Paystub</div>
+                                    <div className="text-white/70 text-sm">Upload a PDF or image to instantly fill this form</div>
                                 </div>
                                 <span className="material-symbols-outlined ml-auto">arrow_forward</span>
                             </div>
-                        </div>
+                        </motion.div>
                     )}
 
                     {/* Owner Selector */}
                     {isMarriedJoint && (
-                        <div className="p-1 bg-neutral-100 dark:bg-neutral-800 rounded-xl flex">
+                        <div className="p-1 bg-white/5 rounded-xl flex">
                             {['primary', 'spouse'].map(owner => (
                                 <button
                                     key={owner}
                                     onClick={() => setForm({ ...form, owner })}
                                     className={cn(
-                                        "flex-1 py-2.5 rounded-lg text-sm font-bold transition-all",
+                                        "flex-1 py-3 rounded-lg text-sm font-bold transition-all",
                                         form.owner === owner
-                                            ? "bg-white dark:bg-neutral-700 text-primary shadow-sm"
-                                            : "text-text-muted hover:text-text-main"
+                                            ? "bg-gradient-to-r from-primary to-accent-cyan text-white shadow-glow-sm"
+                                            : "text-zinc-400 hover:text-white"
                                     )}
                                 >
                                     {owner === 'primary' ? (taxPayer?.firstName || 'Taxpayer') : (taxPayer?.spouseFirstName || 'Spouse')}
@@ -260,13 +295,13 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
 
                     {/* Description */}
                     <div>
-                        <label className="text-xs font-bold text-text-muted block mb-1.5 uppercase tracking-wide">
+                        <label className="text-xs font-bold text-zinc-400 block mb-2 uppercase tracking-widest">
                             {activeCategory === 'W-2' ? 'Employer Name' : activeCategory === 'Business' ? 'Business Name' : activeCategory === 'Investment' ? 'Payer Name' : 'Property Name'}
                         </label>
                         <input
                             value={form.description}
                             onChange={e => setForm({ ...form, description: e.target.value })}
-                            className="w-full rounded-xl bg-white dark:bg-neutral-900 border-2 border-border-light dark:border-neutral-700 px-4 py-3 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-lg"
+                            className="w-full rounded-xl border-2 border-white/10 bg-white/5 px-5 py-4 outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 text-lg font-medium text-white placeholder-zinc-600 transition-all"
                             placeholder="e.g. Acme Corp"
                             autoFocus
                         />
@@ -284,9 +319,8 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                                     <CurrencyInput label="Box 3 - SS Wages" value={form.details?.w2_box3_ss_wages || 0} onChange={v => setForm(f => ({ ...f, details: { ...f.details, w2_box3_ss_wages: v } }))} />
                                     <CurrencyInput label="Box 5 - Med Wages" value={form.details?.w2_box5_med_wages || 0} onChange={v => setForm(f => ({ ...f, details: { ...f.details, w2_box5_med_wages: v } }))} />
                                 </div>
-
-                                <div className="pt-4 border-t border-border-light dark:border-border-dark">
-                                    <h4 className="text-sm font-bold mb-4 flex items-center gap-2">
+                                <div className="pt-4 border-t border-white/10">
+                                    <h4 className="text-sm font-bold mb-4 flex items-center gap-2 text-zinc-300">
                                         <span className="material-symbols-outlined text-primary">savings</span>
                                         Pre-Tax Benefits (Box 12)
                                     </h4>
@@ -308,9 +342,9 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                         {activeCategory === 'Investment' && (
                             <>
                                 <div>
-                                    <label className="text-xs font-bold text-text-muted block mb-1.5 uppercase tracking-wide">Income Type</label>
+                                    <label className="text-xs font-bold text-zinc-400 block mb-2 uppercase tracking-widest">Income Type</label>
                                     <select
-                                        className="w-full rounded-xl bg-white dark:bg-neutral-900 border-2 border-border-light dark:border-neutral-700 px-4 py-3 outline-none focus:border-primary transition-all"
+                                        className="w-full rounded-xl border-2 border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-primary text-white transition-all"
                                         value={form.type}
                                         onChange={e => setForm(f => ({ ...f, type: e.target.value as any }))}
                                     >
@@ -328,25 +362,27 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                                 <CurrencyInput label="Net Rental Income" value={form.amount || 0} onChange={v => setForm({ ...form, amount: v })} />
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-xs font-bold text-text-muted block mb-1.5 uppercase tracking-wide">Days Rented</label>
-                                        <input type="number" value={form.details?.rental_days_rented || ''} onChange={e => setForm(f => ({ ...f, details: { ...f.details, rental_days_rented: parseFloat(e.target.value) } }))} className="w-full rounded-xl bg-white dark:bg-neutral-900 border-2 border-border-light dark:border-neutral-700 px-4 py-3 outline-none focus:border-primary transition-all" />
+                                        <label className="text-xs font-bold text-zinc-400 block mb-2 uppercase tracking-widest">Days Rented</label>
+                                        <input type="number" value={form.details?.rental_days_rented || ''} onChange={e => setForm(f => ({ ...f, details: { ...f.details, rental_days_rented: parseFloat(e.target.value) } }))} className="w-full rounded-xl border-2 border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-primary text-white transition-all" />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold text-text-muted block mb-1.5 uppercase tracking-wide">Days Personal</label>
-                                        <input type="number" value={form.details?.rental_days_personal || ''} onChange={e => setForm(f => ({ ...f, details: { ...f.details, rental_days_personal: parseFloat(e.target.value) } }))} className="w-full rounded-xl bg-white dark:bg-neutral-900 border-2 border-border-light dark:border-neutral-700 px-4 py-3 outline-none focus:border-primary transition-all" />
+                                        <label className="text-xs font-bold text-zinc-400 block mb-2 uppercase tracking-widest">Days Personal</label>
+                                        <input type="number" value={form.details?.rental_days_personal || ''} onChange={e => setForm(f => ({ ...f, details: { ...f.details, rental_days_personal: parseFloat(e.target.value) } }))} className="w-full rounded-xl border-2 border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-primary text-white transition-all" />
                                     </div>
                                 </div>
                             </>
                         )}
                     </div>
 
-                    <button
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={handleSaveIncome}
-                        className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/25 transition-all hover:-translate-y-1 hover:shadow-xl flex items-center justify-center gap-2"
+                        className="w-full bg-gradient-to-r from-primary via-accent-cyan to-accent-pink text-white font-bold py-4 rounded-xl shadow-glow-sm transition-all flex items-center justify-center gap-2"
                     >
                         <span className="material-symbols-outlined">check</span>
                         {editingId ? 'Save Changes' : 'Add Income'}
-                    </button>
+                    </motion.button>
                 </div>
             </WizardPanel>
 
@@ -354,14 +390,16 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
             {incomes.length > 0 ? (
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-bold text-text-main dark:text-white">Your Income Sources</h3>
-                        <button
+                        <h3 className="text-lg font-display font-bold text-white">Your Income Sources</h3>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => setShowChart(!showChart)}
-                            className="text-xs font-medium text-text-muted hover:text-primary flex items-center gap-1 transition-colors"
+                            className="text-xs font-bold text-zinc-400 hover:text-primary flex items-center gap-2 px-3 py-2 rounded-lg glass-light transition-colors"
                         >
                             <span className="material-symbols-outlined text-sm">{showChart ? 'visibility_off' : 'bar_chart'}</span>
                             {showChart ? 'Hide Chart' : 'Show Chart'}
-                        </button>
+                        </motion.button>
                     </div>
 
                     {/* Collapsible Chart */}
@@ -371,25 +409,25 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
-                                className="glass-card rounded-xl p-5 h-64 overflow-hidden"
+                                className="glass-card rounded-2xl p-6 h-64 overflow-hidden"
                             >
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={chartData}>
                                         <defs>
                                             <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                                <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.4} />
+                                                <stop offset="95%" stopColor="#22d3ee" stopOpacity={0} />
                                             </linearGradient>
                                         </defs>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" opacity={0.1} />
-                                        <XAxis dataKey="week" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} tickFormatter={(v) => `W${v}`} interval={10} />
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" opacity={0.2} />
+                                        <XAxis dataKey="week" tickLine={false} axisLine={false} tick={{ fontSize: 10, fill: '#71717a' }} tickFormatter={(v) => `W${v}`} interval={10} />
                                         <YAxis hide domain={['auto', 'auto']} />
                                         <RechartsTooltip
-                                            contentStyle={{ backgroundColor: '#1a1a1a', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                            contentStyle={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
                                             formatter={(value: number) => [`$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 'Cumulative']}
                                             labelFormatter={(l) => `Week ${l}`}
                                         />
-                                        <Area type="monotone" dataKey="cumulative" stroke="#10b981" fillOpacity={1} fill="url(#colorIncome)" strokeWidth={2} />
+                                        <Area type="monotone" dataKey="cumulative" stroke="#22d3ee" fillOpacity={1} fill="url(#colorIncome)" strokeWidth={2} />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </motion.div>
@@ -398,7 +436,7 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
 
                     <div className="grid gap-3">
                         <AnimatePresence>
-                            {incomes.map(item => {
+                            {incomes.map((item, i) => {
                                 const catStyle = getCategoryStyle(getCategoryForItem(item));
                                 return (
                                     <motion.div
@@ -406,21 +444,28 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, x: -20 }}
+                                        transition={{ delay: i * 0.05 }}
                                         onClick={() => handleEdit(item)}
-                                        className={`flex justify-between items-center p-5 rounded-xl border-l-4 glass-card cursor-pointer group ${catStyle?.borderColor}`}
+                                        className="flex justify-between items-center p-5 rounded-2xl glass-card cursor-pointer group hover:ring-1 hover:ring-primary/30 transition-all"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className={`p-2.5 rounded-xl ${catStyle?.bgColor}`}>
-                                                <span className={`material-symbols-outlined ${catStyle?.color}`}>{catStyle?.icon}</span>
+                                            <div className={cn(
+                                                "w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br",
+                                                catStyle?.gradient
+                                            )}>
+                                                <span className="material-symbols-outlined text-white">{catStyle?.icon}</span>
                                             </div>
                                             <div>
-                                                <div className="font-bold text-text-main dark:text-white flex items-center gap-2">
+                                                <div className="font-bold text-white flex items-center gap-2">
                                                     {item.description}
-                                                    <span className="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity text-text-muted">edit</span>
+                                                    <span className="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity text-zinc-500">edit</span>
                                                 </div>
-                                                <div className="text-xs text-text-muted flex flex-wrap gap-2 items-center mt-1">
+                                                <div className="text-xs text-zinc-500 flex flex-wrap gap-2 items-center mt-1">
                                                     {isMarriedJoint && (
-                                                        <span className={`px-2 py-0.5 rounded-full font-bold ${item.owner === 'spouse' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'}`}>
+                                                        <span className={cn(
+                                                            "px-2 py-0.5 rounded-full font-bold",
+                                                            item.owner === 'spouse' ? 'bg-accent-pink/20 text-accent-pink' : 'bg-accent-cyan/20 text-accent-cyan'
+                                                        )}>
                                                             {item.owner === 'spouse' ? 'Spouse' : 'You'}
                                                         </span>
                                                     )}
@@ -430,16 +475,21 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                                         </div>
                                         <div className="flex items-center gap-4">
                                             <div className="text-right">
-                                                <div className={`font-bold text-xl ${item.amount < 0 ? 'text-red-500' : 'text-text-main dark:text-white'}`}>
+                                                <div className={cn(
+                                                    "font-display font-bold text-xl tabular-nums",
+                                                    item.amount < 0 ? 'text-danger' : 'text-white'
+                                                )}>
                                                     ${Math.abs(item.amount).toLocaleString()}
                                                 </div>
                                             </div>
-                                            <button
+                                            <motion.button
+                                                whileHover={{ scale: 1.1 }}
+                                                whileTap={{ scale: 0.9 }}
                                                 onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
-                                                className="p-2 rounded-lg text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover:opacity-100"
+                                                className="p-2 rounded-lg text-zinc-500 hover:text-danger hover:bg-danger/10 transition-all opacity-0 group-hover:opacity-100"
                                             >
                                                 <span className="material-symbols-outlined">delete</span>
-                                            </button>
+                                            </motion.button>
                                         </div>
                                     </motion.div>
                                 );
@@ -448,13 +498,17 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                     </div>
                 </div>
             ) : (
-                <div className="text-center py-16 glass-card rounded-2xl border-2 border-dashed border-border-light dark:border-border-dark">
-                    <div className="p-4 bg-neutral-100 dark:bg-neutral-800 rounded-full inline-block mb-4">
-                        <span className="material-symbols-outlined text-4xl text-text-muted">account_balance_wallet</span>
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center py-16 gradient-border rounded-2xl"
+                >
+                    <div className="p-4 bg-white/5 rounded-full inline-block mb-4">
+                        <span className="material-symbols-outlined text-4xl text-zinc-500">account_balance_wallet</span>
                     </div>
-                    <h3 className="text-xl font-bold text-text-main dark:text-white mb-2">No income added yet</h3>
-                    <p className="text-text-muted max-w-md mx-auto">Select an income type above to get started. You can add multiple sources including W-2 employment, self-employment, investments, and rental income.</p>
-                </div>
+                    <h3 className="text-xl font-display font-bold text-white mb-2">No income added yet</h3>
+                    <p className="text-zinc-500 max-w-md mx-auto">Select an income type above to get started. You can add multiple sources including W-2 employment, self-employment, investments, and rental income.</p>
+                </motion.div>
             )}
         </div>
     );
