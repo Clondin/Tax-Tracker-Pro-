@@ -1,0 +1,14 @@
+{
+    "framework": "vite",
+    "functions": {
+        "api/**/*.js": {
+            "includeFiles": "node_modules/@google/generative-ai/**"
+        }
+    },
+    "rewrites": [
+        {
+            "source": "/((?!api/).*)",
+            "destination": "/index.html"
+        }
+    ]
+}
