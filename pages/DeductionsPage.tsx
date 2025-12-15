@@ -232,13 +232,13 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                         onDragLeave={() => setIsDragging(false)}
                         onDrop={handleFileDrop}
                         className={cn(
-                            "border border-dashed rounded-xl p-4 flex items-center gap-4 cursor-pointer transition-all",
-                            isDragging ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20" : "border-neutral-300 dark:border-neutral-700 hover:border-purple-400",
+                            "border border-dashed rounded-xl p-4 flex items-center gap-4 cursor-pointer transition-all bg-neutral-50/50 dark:bg-neutral-900/50",
+                            isDragging ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" : "border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800",
                             isScanning && "animate-pulse"
                         )}
                     >
-                        <div className={cn("p-2 rounded-lg", isDragging ? "bg-purple-500 text-white" : "bg-neutral-100 dark:bg-neutral-800")}>
-                            <span className="material-symbols-outlined text-xl">{isScanning ? 'hourglass_top' : 'document_scanner'}</span>
+                        <div className={cn("p-2 rounded-lg", isDragging ? "bg-blue-500 text-white" : "bg-white dark:bg-neutral-800 shadow-sm")}>
+                            <span className="material-symbols-outlined text-xl text-neutral-600 dark:text-neutral-400">{isScanning ? 'hourglass_top' : 'document_scanner'}</span>
                         </div>
                         <div className="flex-1">
                             <span className="font-semibold text-sm text-text-main dark:text-white">{isScanning ? 'Scanning...' : 'AI Receipt Scanner'}</span>
@@ -248,7 +248,7 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
 
                     {/* Category Cards */}
                     <div>
-                        <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block">Add New Deduction</label>
+                        <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block pl-1">Add New Deduction</label>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {DEDUCTION_CATEGORIES.map(cat => (
                                 <motion.button
@@ -257,13 +257,13 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => selectCategory(cat.id)}
                                     className={cn(
-                                        "p-4 rounded-xl border text-left transition-all",
-                                        "bg-white dark:bg-card-dark border-border-light dark:border-border-dark hover:border-purple-300 dark:hover:border-purple-700 hover:shadow-lg"
+                                        "p-4 rounded-xl border text-left transition-all bg-white dark:bg-card-dark border-border-light dark:border-border-dark",
+                                        "hover:border-neutral-300 dark:hover:border-neutral-600 hover:shadow-lg"
                                     )}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg ${cat.bgColor}`}>
-                                            <span className={`material-symbols-outlined text-lg ${cat.color}`}>{cat.icon}</span>
+                                        <div className="p-2 rounded-lg bg-neutral-50 dark:bg-neutral-800">
+                                            <span className="material-symbols-outlined text-lg text-neutral-600 dark:text-neutral-400">{cat.icon}</span>
                                         </div>
                                         <div>
                                             <div className="font-semibold text-sm text-text-main dark:text-white">{cat.label}</div>
@@ -277,7 +277,7 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
 
                     {/* Existing Deductions List */}
                     <div>
-                        <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block">Your Deductions ({deductions.length})</label>
+                        <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block pl-1">Your Deductions ({deductions.length})</label>
                         <div className="space-y-3">
                             {deductions.map((item, idx) => {
                                 const style = getCategoryStyle(getCategoryForItem(item));
@@ -287,22 +287,22 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: idx * 0.05 }}
-                                        className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-card-dark border border-border-light dark:border-border-dark hover:shadow-md transition-all group"
+                                        className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-card-dark border border-border-light dark:border-border-dark hover:shadow-md hover:border-neutral-300 dark:hover:border-neutral-600 transition-all group"
                                     >
-                                        <div className={`p-2 rounded-lg ${style?.bgColor}`}>
-                                            <span className={`material-symbols-outlined ${style?.color}`}>{style?.icon}</span>
+                                        <div className="p-2 rounded-lg bg-neutral-50 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800">
+                                            <span className="material-symbols-outlined text-neutral-600 dark:text-neutral-400">{style?.icon || 'receipt'}</span>
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="font-semibold text-text-main dark:text-white truncate">{item.description}</div>
                                             <div className="text-xs text-text-muted">{style?.label}</div>
                                         </div>
-                                        <div className="text-lg font-bold text-text-main dark:text-white">${item.amount.toLocaleString()}</div>
+                                        <div className="text-lg font-bold text-text-main dark:text-white font-mono tracking-tight">${item.amount.toLocaleString()}</div>
                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button onClick={() => handleEdit(item)} className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors">
                                                 <span className="material-symbols-outlined text-lg text-text-muted">edit</span>
                                             </button>
-                                            <button onClick={() => handleDelete(item.id)} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
-                                                <span className="material-symbols-outlined text-lg text-red-500">delete</span>
+                                            <button onClick={() => handleDelete(item.id)} className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors group/delete">
+                                                <span className="material-symbols-outlined text-lg text-neutral-400 group-hover/delete:text-red-500 transition-colors">delete</span>
                                             </button>
                                         </div>
                                     </motion.div>
