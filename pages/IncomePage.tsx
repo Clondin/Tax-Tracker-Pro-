@@ -383,7 +383,7 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                     >
                         <span className="material-symbols-outlined">check</span>
                         {editingId ? 'Save Changes' : 'Add Income'}
-                    </button>
+                    </motion.button>
 
                     {/* Contextual Tips */}
                     <div className="pt-6 border-t border-border-light dark:border-neutral-800">

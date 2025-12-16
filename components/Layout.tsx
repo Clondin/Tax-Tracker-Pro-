@@ -95,25 +95,15 @@ const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes =
                                     : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'
                                     }`}
                             >
-                                <span className="material-symbols-outlined text-[18px] group-hover:text-primary transition-colors">search</span>
-                                <span className="text-zinc-500">Search...</span>
-                                <kbd className="ml-2 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-xs font-mono text-zinc-500">
-                                    Ctrl K
-                                </kbd>
-                            </motion.button>
-
-                            {/* Theme Toggle */}
-                            <motion.button
-                                whileHover={{ scale: 1.1, rotate: 15 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={toggleTheme}
-                                className="p-2.5 rounded-xl glass-light text-zinc-400 hover:text-primary transition-colors"
-                            >
-                                <span className="material-symbols-outlined">
-                                    {theme === 'light' ? 'dark_mode' : 'light_mode'}
+                                <span className={`material-symbols-outlined text-[18px] ${isActive(item.path) ? 'filled' : ''}`}>
+                                    {item.icon}
                                 </span>
-                            </motion.button>
+                                <span>{item.label}</span>
+                            </button>
+                        ))}
+                    </nav>
 
+                    <div className="flex items-center gap-3">
                         {/* Command Palette Button */}
                         <button
                             onClick={() => setIsCommandPaletteOpen(true)}
@@ -163,7 +153,7 @@ const Layout: React.FC<LayoutProps> = ({ children, theme, toggleTheme, incomes =
                         ))}
                     </div>
                 </div>
-            </motion.header>
+            </header>
 
             {/* Main Content */}
             <main className="flex-1 w-full max-w-7xl mx-auto px-6 lg:px-8 pt-32 pb-12 relative z-10">
