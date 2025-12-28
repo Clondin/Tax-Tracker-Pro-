@@ -16,7 +16,6 @@ import {
     ArrowLeftIcon,
     ArrowRightIcon,
     HomeIcon,
-    BackpackIcon,
     LaptopIcon,
     RocketIcon,
     TrashIcon,
@@ -28,20 +27,19 @@ interface SetupPageProps {
 }
 
 const STEPS = [
-    { id: 'status', title: 'Filing Status', subtitle: "Let's start with how you're filing", icon: PersonIcon },
-    { id: 'personal', title: 'Your Info', subtitle: 'Tell us about yourself', icon: IdCardIcon },
+    { id: 'status', title: 'Filing Status', subtitle: "How are you filing?", icon: PersonIcon },
+    { id: 'personal', title: 'Your Info', subtitle: 'Basic information', icon: IdCardIcon },
     { id: 'spouse', title: 'Spouse Info', subtitle: 'About your spouse', icon: HeartIcon },
-    { id: 'life', title: 'Life Events', subtitle: 'Any major changes this year?', icon: StarIcon },
+    { id: 'life', title: 'Life Events', subtitle: 'Major changes this year', icon: StarIcon },
     { id: 'dependents', title: 'Dependents', subtitle: 'Who do you support?', icon: FaceIcon },
 ];
 
 const LIFE_QUESTIONS = [
-    { id: 'bought_home', icon: HomeIcon, label: 'Bought a home', hint: 'Mortgage interest deductions' },
-    { id: 'had_baby', icon: FaceIcon, label: 'Had a baby', hint: 'Child Tax Credit' },
-    { id: 'got_married', icon: HeartIcon, label: 'Got married', hint: 'Filing status change' },
-    { id: 'started_business', icon: LaptopIcon, label: 'Started a business', hint: 'Schedule C income' },
-    { id: 'sold_stocks', icon: RocketIcon, label: 'Sold investments', hint: 'Capital gains/losses' },
-    { id: 'went_to_college', icon: BackpackIcon, label: 'Paid for education', hint: 'Education credits' },
+    { id: 'bought_home', icon: HomeIcon, label: 'Bought a home' },
+    { id: 'had_baby', icon: FaceIcon, label: 'Had a baby' },
+    { id: 'got_married', icon: HeartIcon, label: 'Got married' },
+    { id: 'started_business', icon: LaptopIcon, label: 'Started a business' },
+    { id: 'sold_stocks', icon: RocketIcon, label: 'Sold investments' },
 ];
 
 const SetupPage: React.FC<SetupPageProps> = ({ setTaxPayer }) => {
@@ -76,7 +74,7 @@ const SetupPage: React.FC<SetupPageProps> = ({ setTaxPayer }) => {
         const dep: Dependent = {
             id: Math.random().toString(36).substr(2, 9),
             firstName: newDep.firstName || '',
-            lastName: newDep.lastName || formData.lastName,
+            lastName: formData.lastName,
             ssn: '',
             relationship: newDep.relationship as any,
             age: Number(newDep.age) || 0,
@@ -116,306 +114,252 @@ const SetupPage: React.FC<SetupPageProps> = ({ setTaxPayer }) => {
     const progress = ((step + 1) / STEPS.length) * 100;
 
     return (
-        <div className="max-w-4xl mx-auto min-h-[80vh] flex flex-col pt-8">
-            {/* Header with Progress */}
-            <div className="mb-12">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+        <div className="max-w-2xl mx-auto space-y-8">
+            {/* Progress */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
                     <div>
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="flex items-center gap-2 mb-3 text-muted-foreground"
-                        >
-                            <span className="text-xs font-bold uppercase tracking-widest">
-                                Step {step + 1} of {STEPS.length}
-                            </span>
-                        </motion.div>
-                        <motion.h1
-                            key={currentStep.title}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="text-3xl md:text-4xl font-bold tracking-tight mb-2"
-                        >
-                            {currentStep.title}
-                        </motion.h1>
-                        <motion.p
-                            key={currentStep.subtitle}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.1 }}
-                            className="text-lg text-muted-foreground"
-                        >
-                            {currentStep.subtitle}
-                        </motion.p>
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            Step {step + 1} of {STEPS.length}
+                        </div>
+                        <h1 className="text-2xl font-bold">{currentStep.title}</h1>
+                        <p className="text-muted-foreground text-sm">{currentStep.subtitle}</p>
                     </div>
-
-                    <div className="hidden md:flex items-center gap-2">
-                        {STEPS.map((s, i) => (
+                    <div className="flex gap-1">
+                        {STEPS.map((_, i) => (
                             <div
-                                key={s.id}
+                                key={i}
                                 className={cn(
-                                    "w-2 h-2 rounded-full transition-all duration-300",
-                                    i === step ? "bg-primary w-8" : i < step ? "bg-primary/50" : "bg-muted"
+                                    "w-2 h-2 rounded-full transition-all",
+                                    i === step ? "bg-primary w-6" : i < step ? "bg-primary/50" : "bg-muted"
                                 )}
                             />
                         ))}
                     </div>
                 </div>
-
                 <div className="h-1 bg-muted rounded-full overflow-hidden">
                     <motion.div
                         className="h-full bg-primary"
                         initial={{ width: 0 }}
                         animate={{ width: `${progress}%` }}
-                        transition={{ duration: 0.5, ease: "easeOut" }}
                     />
                 </div>
             </div>
 
             {/* Step Content */}
-            <div className="flex-1">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={step}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        {/* Filing Status Step */}
-                        {currentStep.id === 'status' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {[
-                                    { id: 'single', label: 'Single', icon: PersonIcon, desc: 'Unmarried, divorced, or legally separated' },
-                                    { id: 'married_joint', label: 'Married Filing Jointly', icon: HeartIcon, desc: 'Combined income with spouse' },
-                                    { id: 'head_household', label: 'Head of Household', icon: HomeIcon, desc: 'Unmarried with qualifying dependent' },
-                                    { id: 'married_separate', label: 'Married Filing Separately', icon: PersonIcon, desc: 'Separate returns from spouse' },
-                                ].map((s) => (
-                                    <div
-                                        key={s.id}
-                                        onClick={() => handleStatusChange(s.id as any)}
-                                        className={cn(
-                                            "relative p-6 rounded-xl border-2 cursor-pointer transition-all hover:bg-muted/50",
-                                            formData.filingStatus === s.id
-                                                ? "border-primary bg-primary/5 shadow-md"
-                                                : "border-border hover:border-primary/50"
-                                        )}
-                                    >
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div className={cn(
-                                                "p-3 rounded-lg",
-                                                formData.filingStatus === s.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                                            )}>
-                                                <s.icon className="w-6 h-6" />
-                                            </div>
-                                            {formData.filingStatus === s.id && (
-                                                <CheckIcon className="w-6 h-6 text-primary" />
-                                            )}
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={step}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.15 }}
+                >
+                    {/* Filing Status */}
+                    {currentStep.id === 'status' && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {[
+                                { id: 'single', label: 'Single', desc: 'Unmarried or legally separated' },
+                                { id: 'married_joint', label: 'Married Filing Jointly', desc: 'Combined with spouse' },
+                                { id: 'head_household', label: 'Head of Household', desc: 'Unmarried with dependents' },
+                                { id: 'married_separate', label: 'Married Filing Separately', desc: 'Separate from spouse' },
+                            ].map((s) => (
+                                <Card
+                                    key={s.id}
+                                    onClick={() => handleStatusChange(s.id as any)}
+                                    className={cn(
+                                        "cursor-pointer transition-all",
+                                        formData.filingStatus === s.id
+                                            ? "ring-2 ring-primary bg-primary/5"
+                                            : "hover:border-primary/50"
+                                    )}
+                                >
+                                    <CardContent className="p-4 flex items-start gap-3">
+                                        <div className={cn(
+                                            "w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5",
+                                            formData.filingStatus === s.id ? "border-primary bg-primary" : "border-muted-foreground"
+                                        )}>
+                                            {formData.filingStatus === s.id && <CheckIcon className="w-3 h-3 text-white" />}
                                         </div>
-                                        <h3 className="font-semibold text-lg mb-1">{s.label}</h3>
-                                        <p className="text-sm text-muted-foreground">{s.desc}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Personal Info Step */}
-                        {currentStep.id === 'personal' && (
-                            <Card>
-                                <CardContent className="p-8 space-y-6">
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium">First Name</label>
-                                            <Input
-                                                value={formData.firstName}
-                                                onChange={e => setFormData(f => ({ ...f, firstName: e.target.value }))}
-                                                placeholder="John"
-                                                autoFocus
-                                            />
+                                        <div>
+                                            <div className="font-medium">{s.label}</div>
+                                            <div className="text-xs text-muted-foreground">{s.desc}</div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium">Last Name</label>
-                                            <Input
-                                                value={formData.lastName}
-                                                onChange={e => setFormData(f => ({ ...f, lastName: e.target.value }))}
-                                                placeholder="Doe"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-col gap-4 pt-4 border-t">
-                                        <label className="flex items-center gap-3 cursor-pointer p-4 rounded-lg border hover:bg-muted/50 transition-colors">
-                                            <input
-                                                type="checkbox"
-                                                checked={formData.isOver65}
-                                                onChange={e => setFormData(f => ({ ...f, isOver65: e.target.checked }))}
-                                                className="w-4 h-4 rounded border-primary text-primary focus:ring-offset-background"
-                                            />
-                                            <span className="text-sm font-medium">I was born before Jan 2, 1959 (Age 65+)</span>
-                                        </label>
-                                        <label className="flex items-center gap-3 cursor-pointer p-4 rounded-lg border hover:bg-muted/50 transition-colors">
-                                            <input
-                                                type="checkbox"
-                                                checked={formData.isBlind}
-                                                onChange={e => setFormData(f => ({ ...f, isBlind: e.target.checked }))}
-                                                className="w-4 h-4 rounded border-primary text-primary focus:ring-offset-background"
-                                            />
-                                            <span className="text-sm font-medium">I am legally blind</span>
-                                        </label>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
-
-                        {/* Spouse Info Step */}
-                        {currentStep.id === 'spouse' && isMarried && (
-                            <Card>
-                                <CardContent className="p-8 space-y-6">
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium">Spouse First Name</label>
-                                            <Input
-                                                value={formData.spouseFirstName}
-                                                onChange={e => setFormData(f => ({ ...f, spouseFirstName: e.target.value }))}
-                                                placeholder="Jane"
-                                                autoFocus
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium">Spouse Last Name</label>
-                                            <Input
-                                                value={formData.spouseLastName}
-                                                onChange={e => setFormData(f => ({ ...f, spouseLastName: e.target.value }))}
-                                                placeholder="Doe"
-                                            />
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
-
-                        {/* Life Events Step */}
-                        {currentStep.id === 'life' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {LIFE_QUESTIONS.map((q) => (
-                                    <div
-                                        key={q.id}
-                                        onClick={() => setLifeEvents(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
-                                        className={cn(
-                                            "relative p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md",
-                                            lifeEvents[q.id]
-                                                ? "border-primary bg-primary/5"
-                                                : "border-border bg-card hover:bg-muted/50"
-                                        )}
-                                    >
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <div className={cn(
-                                                "p-2 rounded-md",
-                                                lifeEvents[q.id] ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                                            )}>
-                                                <q.icon className="w-5 h-5" />
-                                            </div>
-                                            <div className="font-medium text-sm">{q.label}</div>
-                                        </div>
-                                        <div className="text-xs text-muted-foreground ml-12">{q.hint}</div>
-                                        {lifeEvents[q.id] && (
-                                            <div className="absolute top-2 right-2 text-primary">
-                                                <CheckIcon className="w-5 h-5" />
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Dependents Step */}
-                        {currentStep.id === 'dependents' && (
-                            <div className="max-w-2xl mx-auto space-y-6">
-                                {formData.dependents.length > 0 && (
-                                    <div className="space-y-3">
-                                        {formData.dependents.map((d) => (
-                                            <Card key={d.id} className="p-4 flex items-center justify-between">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                                                        {d.firstName[0]}
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-semibold">{d.firstName}</div>
-                                                        <div className="text-xs text-muted-foreground capitalize">{d.relationship} • Age {d.age}</div>
-                                                    </div>
-                                                </div>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => setFormData(f => ({ ...f, dependents: f.dependents.filter(x => x.id !== d.id) }))}
-                                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                >
-                                                    <TrashIcon className="w-5 h-5" />
-                                                </Button>
-                                            </Card>
-                                        ))}
-                                    </div>
-                                )}
-
-                                <Card className="border-dashed">
-                                    <CardContent className="p-6">
-                                        <h3 className="text-sm font-semibold mb-4 text-muted-foreground">ADD DEPENDENT</h3>
-                                        <div className="grid grid-cols-12 gap-3 mb-4">
-                                            <div className="col-span-12 md:col-span-5">
-                                                <Input
-                                                    placeholder="Name"
-                                                    value={newDep.firstName}
-                                                    onChange={e => setNewDep({ ...newDep, firstName: e.target.value })}
-                                                />
-                                            </div>
-                                            <div className="col-span-6 md:col-span-3">
-                                                <Input
-                                                    type="number"
-                                                    placeholder="Age"
-                                                    value={newDep.age || ''}
-                                                    onChange={e => setNewDep({ ...newDep, age: parseInt(e.target.value) })}
-                                                />
-                                            </div>
-                                            <div className="col-span-6 md:col-span-4">
-                                                <select
-                                                    value={newDep.relationship}
-                                                    onChange={e => setNewDep({ ...newDep, relationship: e.target.value as any })}
-                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                                >
-                                                    <option value="child">Child</option>
-                                                    <option value="parent">Parent</option>
-                                                    <option value="sibling">Sibling</option>
-                                                    <option value="relative">Other Relative</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <Button onClick={addDependent} className="w-full" disabled={!newDep.firstName}>
-                                            <PlusIcon className="mr-2 h-4 w-4" />
-                                            Add Dependent
-                                        </Button>
                                     </CardContent>
                                 </Card>
-                            </div>
-                        )}
-                    </motion.div>
-                </AnimatePresence>
-            </div>
+                            ))}
+                        </div>
+                    )}
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between items-center py-6 border-t mt-12 bg-background/50 backdrop-blur-sm sticky bottom-0 z-10">
+                    {/* Personal Info */}
+                    {currentStep.id === 'personal' && (
+                        <Card>
+                            <CardContent className="p-6 space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">First Name</label>
+                                        <Input
+                                            value={formData.firstName}
+                                            onChange={e => setFormData(f => ({ ...f, firstName: e.target.value }))}
+                                            placeholder="John"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Last Name</label>
+                                        <Input
+                                            value={formData.lastName}
+                                            onChange={e => setFormData(f => ({ ...f, lastName: e.target.value }))}
+                                            placeholder="Doe"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex gap-4 pt-2">
+                                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.isOver65}
+                                            onChange={e => setFormData(f => ({ ...f, isOver65: e.target.checked }))}
+                                            className="rounded"
+                                        />
+                                        Age 65+
+                                    </label>
+                                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.isBlind}
+                                            onChange={e => setFormData(f => ({ ...f, isBlind: e.target.checked }))}
+                                            className="rounded"
+                                        />
+                                        Legally blind
+                                    </label>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Spouse Info */}
+                    {currentStep.id === 'spouse' && isMarried && (
+                        <Card>
+                            <CardContent className="p-6 space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Spouse First Name</label>
+                                        <Input
+                                            value={formData.spouseFirstName}
+                                            onChange={e => setFormData(f => ({ ...f, spouseFirstName: e.target.value }))}
+                                            placeholder="Jane"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Spouse Last Name</label>
+                                        <Input
+                                            value={formData.spouseLastName}
+                                            onChange={e => setFormData(f => ({ ...f, spouseLastName: e.target.value }))}
+                                            placeholder="Doe"
+                                        />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Life Events */}
+                    {currentStep.id === 'life' && (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {LIFE_QUESTIONS.map((q) => (
+                                <Card
+                                    key={q.id}
+                                    onClick={() => setLifeEvents(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
+                                    className={cn(
+                                        "cursor-pointer transition-all",
+                                        lifeEvents[q.id] ? "ring-2 ring-primary bg-primary/5" : "hover:border-primary/50"
+                                    )}
+                                >
+                                    <CardContent className="p-4 flex items-center gap-3">
+                                        <div className={cn(
+                                            "p-2 rounded-md",
+                                            lifeEvents[q.id] ? "bg-primary text-white" : "bg-muted"
+                                        )}>
+                                            <q.icon className="w-4 h-4" />
+                                        </div>
+                                        <span className="text-sm font-medium">{q.label}</span>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Dependents */}
+                    {currentStep.id === 'dependents' && (
+                        <div className="space-y-4">
+                            {formData.dependents.length > 0 && (
+                                <div className="space-y-2">
+                                    {formData.dependents.map((d) => (
+                                        <Card key={d.id} className="p-3 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                                                    {d.firstName[0]}
+                                                </div>
+                                                <div>
+                                                    <div className="font-medium text-sm">{d.firstName}</div>
+                                                    <div className="text-xs text-muted-foreground capitalize">{d.relationship} • Age {d.age}</div>
+                                                </div>
+                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => setFormData(f => ({ ...f, dependents: f.dependents.filter(x => x.id !== d.id) }))}
+                                            >
+                                                <TrashIcon className="w-4 h-4 text-destructive" />
+                                            </Button>
+                                        </Card>
+                                    ))}
+                                </div>
+                            )}
+
+                            <Card className="border-dashed">
+                                <CardContent className="p-4 space-y-3">
+                                    <div className="text-xs font-semibold text-muted-foreground uppercase">Add Dependent</div>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            placeholder="Name"
+                                            value={newDep.firstName}
+                                            onChange={e => setNewDep({ ...newDep, firstName: e.target.value })}
+                                            className="flex-1"
+                                        />
+                                        <Input
+                                            type="number"
+                                            placeholder="Age"
+                                            value={newDep.age || ''}
+                                            onChange={e => setNewDep({ ...newDep, age: parseInt(e.target.value) })}
+                                            className="w-20"
+                                        />
+                                        <Button onClick={addDependent} disabled={!newDep.firstName}>
+                                            <PlusIcon className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
+                </motion.div>
+            </AnimatePresence>
+
+            {/* Navigation */}
+            <div className="flex justify-between pt-4">
                 <Button
                     variant="ghost"
                     onClick={prevStep}
                     disabled={step === 0}
-                    className={cn(step === 0 && "opacity-0")}
+                    className={cn(step === 0 && "invisible")}
                 >
-                    <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                    <ArrowLeftIcon className="mr-2 w-4 h-4" />
                     Back
                 </Button>
 
-                <Button onClick={nextStep} size="lg" className="px-8 shadow-lg shadow-primary/20">
+                <Button onClick={nextStep}>
                     {step === STEPS.length - 1 ? 'Start Tax Return' : 'Continue'}
-                    <ArrowRightIcon className="ml-2 h-4 w-4" />
+                    <ArrowRightIcon className="ml-2 w-4 h-4" />
                 </Button>
             </div>
         </div>

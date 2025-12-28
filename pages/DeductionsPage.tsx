@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DeductionItem, TaxResult } from '../types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { cn } from '../lib/utils';
@@ -9,12 +9,13 @@ import {
     HomeIcon,
     HeartIcon,
     SunIcon,
-    PlusIcon,
     TrashIcon,
     Pencil1Icon,
     CheckIcon,
     Cross2Icon,
-    RocketIcon
+    RocketIcon,
+    UploadIcon,
+    ReloadIcon
 } from '@radix-ui/react-icons';
 
 interface DeductionsPageProps {
@@ -24,17 +25,19 @@ interface DeductionsPageProps {
 }
 
 const DEDUCTION_CATEGORIES = [
-    { id: 'health', label: 'Health & FSA', subtitle: 'Medical expenses, HSA', icon: HeartIcon },
+    { id: 'health', label: 'Health & FSA', subtitle: 'Medical, HSA', icon: HeartIcon },
     { id: 'home', label: 'Mortgage & Home', subtitle: 'Interest, property tax', icon: HomeIcon },
     { id: 'charity', label: 'Charitable Giving', subtitle: 'Donations', icon: RocketIcon },
-    { id: 'credits', label: 'Energy & Credits', subtitle: 'Solar, EV, etc.', icon: SunIcon },
+    { id: 'credits', label: 'Energy & Credits', subtitle: 'Solar, EV', icon: SunIcon },
 ];
 
-const STANDARD_DEDUCTION = 14600; // 2024 single
+const STANDARD_DEDUCTION = 14600;
 
 const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductions, taxResult }) => {
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [isScanning, setIsScanning] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
     const [form, setForm] = useState<Partial<DeductionItem>>({
         description: '',
         amount: 0,
@@ -59,13 +62,7 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
 
     const handleEdit = (item: DeductionItem) => {
         setEditingId(item.id);
-        const cat = DEDUCTION_CATEGORIES.find(c => {
-            if (['medical', 'hsa_contrib'].includes(item.category)) return c.id === 'health';
-            if (['mortgage', 'property_tax', 'salt'].includes(item.category)) return c.id === 'home';
-            if (['charity_cash', 'charity_noncash'].includes(item.category)) return c.id === 'charity';
-            return c.id === 'credits';
-        });
-        setActiveCategory(cat?.id || 'home');
+        setActiveCategory('home');
         setForm(item);
     };
 
@@ -92,187 +89,242 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
         setDeductions(deductions.filter(d => d.id !== id));
     };
 
+    // AI Receipt Scanner
+    const handleFileDrop = useCallback(async (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files[0];
+        if (!file || !file.type.startsWith('image/')) return;
+
+        setIsScanning(true);
+        try {
+            const base64 = await new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve((reader.result as string).split(',')[1]);
+                reader.readAsDataURL(file);
+            });
+
+            const response = await fetch('/api/gemini/receipt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: base64, mimeType: file.type })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.total) {
+                    const newItem: DeductionItem = {
+                        id: Math.random().toString(36).substr(2, 9),
+                        description: data.vendor || 'Receipt',
+                        category: data.category === 'charity' ? 'charity_cash' : (data.category === 'medical' ? 'medical' : 'other') as any,
+                        amount: data.total,
+                        details: { ai_scanned: true, scan_date: data.date }
+                    };
+                    setDeductions([...deductions, newItem]);
+                }
+            }
+        } catch (err) {
+            console.error('Scan failed:', err);
+        } finally {
+            setIsScanning(false);
+        }
+    }, [deductions, setDeductions]);
+
+    const handleFileClick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = async (e: any) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+
+            // Simulate drop event
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            const dropEvent = { preventDefault: () => { }, dataTransfer: dt } as unknown as React.DragEvent;
+            await handleFileDrop(dropEvent);
+        };
+        input.click();
+    };
+
     const totalDeductions = deductions.reduce((a, b) => a + b.amount, 0);
     const isStandardBetter = totalDeductions < STANDARD_DEDUCTION;
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div className="max-w-5xl mx-auto space-y-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Deductions</h1>
-                    <p className="text-muted-foreground mt-2">Maximize your tax savings.</p>
+                    <h1 className="text-2xl font-bold">Deductions</h1>
+                    <p className="text-muted-foreground text-sm">Track expenses to maximize your tax savings</p>
                 </div>
                 <Card className={cn(
-                    "border-none shadow-lg transition-colors",
-                    isStandardBetter ? "bg-muted text-muted-foreground" : "bg-emerald-600 text-white"
+                    "px-4 py-2 border-l-2",
+                    isStandardBetter ? "border-l-muted-foreground" : "border-l-emerald-500"
                 )}>
-                    <CardContent className="p-4 flex items-center gap-4">
-                        <div className="p-2 bg-white/20 rounded-lg">
-                            <RocketIcon className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <div className="text-sm font-medium opacity-90">Total Deductions</div>
-                            <div className="text-2xl font-bold">${totalDeductions.toLocaleString()}</div>
-                        </div>
-                    </CardContent>
+                    <div className="text-xs text-muted-foreground">Total Deductions</div>
+                    <div className="text-lg font-bold">${totalDeductions.toLocaleString()}</div>
                 </Card>
             </div>
 
-            {/* Strategy Tip */}
-            <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="p-4 flex items-center gap-4">
-                    <div className="p-2 rounded-full bg-primary/10 text-primary">
-                        <SunIcon className="w-5 h-5" />
+            {/* Strategy Card */}
+            <Card className={cn(
+                "border-l-4",
+                isStandardBetter ? "border-l-muted bg-muted/30" : "border-l-emerald-500 bg-emerald-50 dark:bg-emerald-950/20"
+            )}>
+                <CardContent className="p-4 flex items-center gap-3">
+                    <div className={cn(
+                        "p-2 rounded-full",
+                        isStandardBetter ? "bg-muted text-muted-foreground" : "bg-emerald-100 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-400"
+                    )}>
+                        <CheckIcon className="w-4 h-4" />
                     </div>
                     <div>
-                        <h4 className="font-semibold text-primary">Recommendation</h4>
-                        <p className="text-sm text-muted-foreground">
+                        <h4 className="font-semibold text-sm">
+                            {isStandardBetter ? 'Take Standard Deduction' : 'Itemize Your Deductions'}
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
                             {isStandardBetter
-                                ? `Take the Standard Deduction of $${STANDARD_DEDUCTION.toLocaleString()}. You need $${(STANDARD_DEDUCTION - totalDeductions).toLocaleString()} more to itemize.`
-                                : "You should Itemize! You have exceeded the standard deduction."}
+                                ? `You need $${(STANDARD_DEDUCTION - totalDeductions).toLocaleString()} more to beat the $${STANDARD_DEDUCTION.toLocaleString()} standard deduction`
+                                : 'You have exceeded the standard deduction threshold!'}
                         </p>
                     </div>
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column: Form/Selection */}
-                <div className="lg:col-span-2 space-y-6">
-                    {activeCategory ? (
-                        <Card className="border-primary/20 shadow-md">
-                            <CardHeader className="flex flex-row items-center justify-between">
+            {/* AI Receipt Scanner */}
+            <Card
+                className={cn(
+                    "border-dashed border-2 cursor-pointer transition-all group",
+                    isDragging ? "border-primary bg-primary/5" : "hover:border-primary/50",
+                    isScanning && "animate-pulse-subtle"
+                )}
+                onClick={handleFileClick}
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleFileDrop}
+            >
+                <CardContent className="p-4 flex items-center gap-4">
+                    <div className={cn(
+                        "p-3 rounded-lg transition-colors",
+                        isDragging ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
+                    )}>
+                        {isScanning ? <ReloadIcon className="w-5 h-5 animate-spin" /> : <UploadIcon className="w-5 h-5" />}
+                    </div>
+                    <div className="flex-1">
+                        <h3 className="font-semibold">{isScanning ? 'Scanning Receipt...' : 'AI Receipt Scanner'}</h3>
+                        <p className="text-sm text-muted-foreground">
+                            {isDragging ? 'Drop to scan' : 'Drop or click to upload a receipt image for automatic extraction'}
+                        </p>
+                    </div>
+                    <RocketIcon className="w-5 h-5 text-muted-foreground" />
+                </CardContent>
+            </Card>
+
+            {/* Category Selection or Form */}
+            {activeCategory ? (
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between pb-4">
+                        <CardTitle className="text-base">
+                            {editingId ? 'Edit Deduction' : `Add ${DEDUCTION_CATEGORIES.find(c => c.id === activeCategory)?.label}`}
+                        </CardTitle>
+                        <Button variant="ghost" size="icon" onClick={resetForm}>
+                            <Cross2Icon className="w-4 h-4" />
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Description</label>
+                            <Input
+                                placeholder="e.g. Mortgage Interest, Charity Name"
+                                value={form.description}
+                                onChange={e => setForm({ ...form, description: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Amount</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-2.5 text-muted-foreground text-sm">$</span>
+                                <Input
+                                    type="number"
+                                    className="pl-7"
+                                    value={form.amount || ''}
+                                    onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) })}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-2 pt-2">
+                            <Button variant="outline" onClick={resetForm}>Cancel</Button>
+                            <Button onClick={handleSave}>
+                                <CheckIcon className="mr-2 w-4 h-4" />
+                                Save
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            ) : (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    {DEDUCTION_CATEGORIES.map((cat) => (
+                        <Card
+                            key={cat.id}
+                            className="cursor-pointer hover:border-primary/50 hover:shadow-sm transition-all group"
+                            onClick={() => selectCategory(cat.id)}
+                        >
+                            <CardContent className="p-4 flex items-center gap-3">
+                                <div className="p-2 rounded-md bg-muted group-hover:bg-primary/10 transition-colors">
+                                    <cat.icon className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
+                                </div>
                                 <div>
-                                    <CardTitle>
-                                        {editingId ? 'Edit Deduction' : `Add ${DEDUCTION_CATEGORIES.find(c => c.id === activeCategory)?.label}`}
-                                    </CardTitle>
-                                    <CardDescription>Enter the details below</CardDescription>
-                                </div>
-                                <Button variant="ghost" size="icon" onClick={resetForm}>
-                                    <Cross2Icon className="w-5 h-5" />
-                                </Button>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Description</label>
-                                    <Input
-                                        placeholder="e.g. Mortgage Interest, Charity Name"
-                                        value={form.description}
-                                        onChange={e => setForm({ ...form, description: e.target.value })}
-                                        autoFocus
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Amount</label>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
-                                        <Input
-                                            type="number"
-                                            className="pl-7"
-                                            value={form.amount || ''}
-                                            onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) })}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="pt-4 flex justify-end gap-2">
-                                    <Button variant="outline" onClick={resetForm}>Cancel</Button>
-                                    <Button onClick={handleSave}>
-                                        <CheckIcon className="mr-2 w-4 h-4" />
-                                        Save Deduction
-                                    </Button>
+                                    <h3 className="font-medium text-sm">{cat.label}</h3>
+                                    <p className="text-xs text-muted-foreground">{cat.subtitle}</p>
                                 </div>
                             </CardContent>
                         </Card>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {DEDUCTION_CATEGORIES.map((cat) => (
-                                <Card
-                                    key={cat.id}
-                                    className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-md group"
-                                    onClick={() => selectCategory(cat.id)}
-                                >
-                                    <CardContent className="p-6 flex items-center gap-4">
-                                        <div className="p-3 rounded-xl bg-muted group-hover:bg-primary/10 transition-colors text-muted-foreground group-hover:text-primary">
-                                            <cat.icon className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-semibold">{cat.label}</h3>
-                                            <p className="text-sm text-muted-foreground">{cat.subtitle}</p>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    )}
+                    ))}
+                </div>
+            )}
 
-                    {/* Deductions List */}
-                    <div className="space-y-4 pt-4">
-                        <h3 className="text-lg font-semibold tracking-tight">Your Deductions</h3>
-                        {deductions.length === 0 ? (
-                            <div className="text-center py-12 border-2 border-dashed rounded-xl text-muted-foreground">
-                                No deductions added yet. Select a category above.
-                            </div>
-                        ) : (
-                            <div className="space-y-3">
-                                <AnimatePresence>
-                                    {deductions.map((item) => (
-                                        <motion.div
-                                            key={item.id}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, height: 0 }}
-                                            className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className="p-2 rounded-md bg-muted">
-                                                    <CheckIcon />
-                                                </div>
-                                                <div>
-                                                    <div className="font-medium">{item.description}</div>
-                                                    <div className="text-xs text-muted-foreground capitalize">{item.category.replace('_', ' ')}</div>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-4">
-                                                <div className="font-bold tabular-nums">${item.amount.toLocaleString()}</div>
-                                                <div className="flex gap-1">
-                                                    <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
-                                                        <Pencil1Icon className="w-4 h-4" />
-                                                    </Button>
-                                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>
-                                                        <TrashIcon className="w-4 h-4" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </AnimatePresence>
-                            </div>
-                        )}
+            {/* Deductions List */}
+            <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground">Your Deductions ({deductions.length})</h3>
+                {deductions.length === 0 ? (
+                    <div className="text-center py-8 border rounded-lg text-muted-foreground text-sm">
+                        No deductions added yet. Use the AI scanner or select a category above.
                     </div>
-                </div>
-
-                {/* Summary Column */}
-                <div className="space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-base">Deduction Breakdown</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-muted-foreground">Standard Deduction</span>
-                                    <span className="font-medium">${STANDARD_DEDUCTION.toLocaleString()}</span>
+                ) : (
+                    <div className="space-y-2">
+                        {deductions.map((item) => (
+                            <div
+                                key={item.id}
+                                className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors group"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-md bg-muted">
+                                        <CheckIcon className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <div className="font-medium text-sm">{item.description}</div>
+                                        <div className="text-xs text-muted-foreground capitalize">
+                                            {item.category.replace('_', ' ')}
+                                            {item.details?.ai_scanned && <span className="ml-2 text-primary">• AI Scanned</span>}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="h-px bg-border" />
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-muted-foreground">Your Itemized Total</span>
-                                    <span className={cn("font-bold", isStandardBetter ? "text-muted-foreground" : "text-emerald-600")}>
-                                        ${totalDeductions.toLocaleString()}
-                                    </span>
+                                <div className="flex items-center gap-3">
+                                    <div className="font-semibold">${item.amount.toLocaleString()}</div>
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(item)}>
+                                            <Pencil1Icon className="w-3 h-3" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(item.id)}>
+                                            <TrashIcon className="w-3 h-3" />
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
