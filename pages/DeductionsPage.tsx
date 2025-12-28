@@ -1,10 +1,21 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DeductionItem, TaxResult } from '../types';
-import { WizardPanel } from '../components/ui/WizardPanel';
-import { CurrencyInput } from '../components/ui/CurrencyInput';
-import { GuideTip } from '../components/ui/GuideTip';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
 import { cn } from '../lib/utils';
+import {
+    HomeIcon,
+    HeartIcon,
+    SunIcon,
+    PlusIcon,
+    TrashIcon,
+    Pencil1Icon,
+    CheckIcon,
+    Cross2Icon,
+    RocketIcon
+} from '@radix-ui/react-icons';
 
 interface DeductionsPageProps {
     deductions: DeductionItem[];
@@ -12,62 +23,63 @@ interface DeductionsPageProps {
     taxResult: TaxResult | null;
 }
 
-type DeductionCategory = 'health' | 'home' | 'charity' | 'credits';
-
-const DEDUCTION_CATEGORIES: { id: DeductionCategory; label: string; subtitle: string; icon: string; gradient: string }[] = [
-    { id: 'health', label: 'Health & FSA', subtitle: 'HSA, medical expenses', icon: 'medical_services', gradient: 'from-rose-500 to-pink-500' },
-    { id: 'home', label: 'Mortgage & Home', subtitle: 'Interest, property tax', icon: 'home', gradient: 'from-blue-500 to-cyan-500' },
-    { id: 'charity', label: 'Charitable Giving', subtitle: 'Cash & non-cash donations', icon: 'volunteer_activism', gradient: 'from-violet-500 to-purple-500' },
-    { id: 'credits', label: 'Energy & Credits', subtitle: 'Solar, EV, adoption', icon: 'bolt', gradient: 'from-amber-500 to-orange-500' },
+const DEDUCTION_CATEGORIES = [
+    { id: 'health', label: 'Health & FSA', subtitle: 'Medical expenses, HSA', icon: HeartIcon },
+    { id: 'home', label: 'Mortgage & Home', subtitle: 'Interest, property tax', icon: HomeIcon },
+    { id: 'charity', label: 'Charitable Giving', subtitle: 'Donations', icon: RocketIcon },
+    { id: 'credits', label: 'Energy & Credits', subtitle: 'Solar, EV, etc.', icon: SunIcon },
 ];
 
-const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductions, taxResult }) => {
-    const [activeCategory, setActiveCategory] = useState<DeductionCategory | null>(null);
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [isScanning, setIsScanning] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
+const STANDARD_DEDUCTION = 14600; // 2024 single
 
-    const [form, setForm] = useState<Partial<DeductionItem> & { details: any }>({
-        amount: 0,
+const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductions, taxResult }) => {
+    const [activeCategory, setActiveCategory] = useState<string | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [form, setForm] = useState<Partial<DeductionItem>>({
         description: '',
+        amount: 0,
         category: 'mortgage',
-        details: {}
     });
 
-    const selectCategory = (cat: DeductionCategory) => {
-        setActiveCategory(cat);
+    const resetForm = () => {
         setEditingId(null);
-        let category: DeductionItem['category'] = 'mortgage';
-        if (cat === 'health') category = 'medical';
-        if (cat === 'charity') category = 'charity_cash';
-        if (cat === 'credits') category = 'energy_credit';
-        setForm({ amount: 0, description: '', category, details: {} });
+        setActiveCategory(null);
+        setForm({ description: '', amount: 0, category: 'mortgage' });
     };
 
-    const resetForm = () => {
-        setActiveCategory(null);
+    const selectCategory = (catId: string) => {
+        setActiveCategory(catId);
         setEditingId(null);
-        setForm({ amount: 0, description: '', category: 'mortgage', details: {} });
+        let category: DeductionItem['category'] = 'mortgage';
+        if (catId === 'health') category = 'medical';
+        if (catId === 'charity') category = 'charity_cash';
+        if (catId === 'credits') category = 'energy_credit';
+        setForm({ description: '', amount: 0, category });
     };
 
     const handleEdit = (item: DeductionItem) => {
         setEditingId(item.id);
-        setForm({ ...item, details: item.details || {} });
-        if (['hsa_contrib', 'medical', 'fsa'].includes(item.category)) setActiveCategory('health');
-        else if (['mortgage', 'property_tax', 'salt'].includes(item.category)) setActiveCategory('home');
-        else if (['charity_cash', 'charity_noncash'].includes(item.category)) setActiveCategory('charity');
-        else setActiveCategory('credits');
+        const cat = DEDUCTION_CATEGORIES.find(c => {
+            if (['medical', 'hsa_contrib'].includes(item.category)) return c.id === 'health';
+            if (['mortgage', 'property_tax', 'salt'].includes(item.category)) return c.id === 'home';
+            if (['charity_cash', 'charity_noncash'].includes(item.category)) return c.id === 'charity';
+            return c.id === 'credits';
+        });
+        setActiveCategory(cat?.id || 'home');
+        setForm(item);
     };
 
     const handleSave = () => {
-        if (!form.amount && form.amount !== 0) return;
+        if (!form.description || !form.amount) return;
+
         const newItem: DeductionItem = {
             id: editingId || Math.random().toString(36).substr(2, 9),
-            description: form.description || `${form.category} Deduction`,
-            category: form.category as DeductionItem['category'],
-            amount: form.amount || 0,
-            details: form.details
+            description: form.description,
+            amount: Number(form.amount),
+            category: form.category as any,
+            details: {}
         };
+
         if (editingId) {
             setDeductions(deductions.map(d => d.id === editingId ? newItem : d));
         } else {
@@ -78,437 +90,190 @@ const DeductionsPage: React.FC<DeductionsPageProps> = ({ deductions, setDeductio
 
     const handleDelete = (id: string) => {
         setDeductions(deductions.filter(d => d.id !== id));
-        if (editingId === id) resetForm();
     };
-
-    const handleFileDrop = useCallback(async (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragging(false);
-        const file = e.dataTransfer.files[0];
-        if (!file || !file.type.startsWith('image/')) return;
-
-        setIsScanning(true);
-        try {
-            const base64 = await new Promise<string>((resolve) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve((reader.result as string).split(',')[1]);
-                reader.readAsDataURL(file);
-            });
-
-            const response = await fetch('/api/gemini/receipt', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: base64, mimeType: file.type })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                if (data.total) {
-                    const newItem: DeductionItem = {
-                        id: Math.random().toString(36).substr(2, 9),
-                        description: data.vendor || 'Receipt',
-                        category: data.category === 'charity' ? 'charity_cash' : (data.category === 'medical' ? 'medical' : 'business_expense') as any,
-                        amount: data.total,
-                        details: { ai_scanned: true, scan_date: data.date, confidence: data.confidence }
-                    };
-                    setDeductions([...deductions, newItem]);
-                }
-            }
-        } catch (err) {
-            console.error('Scan failed:', err);
-        } finally {
-            setIsScanning(false);
-        }
-    }, [deductions, setDeductions]);
 
     const totalDeductions = deductions.reduce((a, b) => a + b.amount, 0);
-    const getCategoryStyle = (cat: DeductionCategory) => DEDUCTION_CATEGORIES.find(c => c.id === cat);
-
-    const getCategoryForItem = (item: DeductionItem): DeductionCategory => {
-        if (['hsa_contrib', 'medical', 'fsa'].includes(item.category)) return 'health';
-        if (['mortgage', 'property_tax', 'salt'].includes(item.category)) return 'home';
-        if (['charity_cash', 'charity_noncash'].includes(item.category)) return 'charity';
-        return 'credits';
-    };
+    const isStandardBetter = totalDeductions < STANDARD_DEDUCTION;
 
     return (
-        <div className="flex flex-col gap-8 h-full animate-in fade-in duration-500 pb-20">
-            {/* Hero Header */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 p-8 text-white">
-                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 bg-purple-400/20 rounded-full blur-2xl"></div>
-
-                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <span className="material-symbols-outlined text-3xl">savings</span>
-                            <h1 className="text-3xl font-bold">Deductions & Credits</h1>
-                        </div>
-                        <p className="text-purple-200 max-w-md">Track your deductions to maximize your refund. We'll tell you if itemizing beats the standard deduction.</p>
-                    </div>
-
-                    {/* Progress Visualization */}
-                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-5 min-w-[280px]">
-                        <div className="flex justify-between text-sm mb-2">
-                            <span className="text-purple-200">Your Deductions</span>
-                            <span className="font-bold">${totalDeductions.toLocaleString()}</span>
-                        </div>
-                        <div className="h-3 bg-white/20 rounded-full overflow-hidden mb-2">
-                            <motion.div
-                                className="h-full bg-gradient-to-r from-emerald-400 to-emerald-300 rounded-full"
-                                initial={{ width: 0 }}
-                                animate={{ width: `${Math.min((totalDeductions / 15750) * 100, 100)}%` }}
-                                transition={{ duration: 0.8, ease: "easeOut" }}
-                            />
-                        </div>
-                        <div className="flex justify-between text-xs">
-                            <span className={totalDeductions >= 15750 ? "text-emerald-300 font-bold" : "text-purple-300"}>
-                                {totalDeductions >= 15750 ? "✓ Itemize!" : `$${(15750 - totalDeductions).toLocaleString()} to beat standard`}
-                            </span>
-                            <span className="text-purple-300">$15,750</span>
-                        </div>
-                    </div>
+        <div className="max-w-6xl mx-auto space-y-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Deductions</h1>
+                    <p className="text-muted-foreground mt-2">Maximize your tax savings.</p>
                 </div>
+                <Card className={cn(
+                    "border-none shadow-lg transition-colors",
+                    isStandardBetter ? "bg-muted text-muted-foreground" : "bg-emerald-600 text-white"
+                )}>
+                    <CardContent className="p-4 flex items-center gap-4">
+                        <div className="p-2 bg-white/20 rounded-lg">
+                            <RocketIcon className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <div className="text-sm font-medium opacity-90">Total Deductions</div>
+                            <div className="text-2xl font-bold">${totalDeductions.toLocaleString()}</div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
-            {/* Empty State or Content */}
-            {deductions.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center py-16">
-                    <div className="w-24 h-24 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-6">
-                        <span className="material-symbols-outlined text-5xl text-purple-500">receipt_long</span>
+            {/* Strategy Tip */}
+            <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="p-4 flex items-center gap-4">
+                    <div className="p-2 rounded-full bg-primary/10 text-primary">
+                        <SunIcon className="w-5 h-5" />
                     </div>
-                    <h2 className="text-2xl font-bold text-text-main dark:text-white mb-2">No deductions yet</h2>
-                    <p className="text-text-muted text-center max-w-md mb-8">
-                        Add your medical expenses, mortgage interest, charitable donations, and more to reduce your taxable income.
-                    </p>
-
-                    {/* Quick Start Cards */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-3xl">
-                        {DEDUCTION_CATEGORIES.map(cat => (
-                            <motion.button
-                                key={cat.id}
-                                whileHover={{ scale: 1.03, y: -4 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => selectCategory(cat.id)}
-                                className={cn(
-                                    "p-5 rounded-2xl border-2 text-left transition-all duration-300",
-                                    "bg-white dark:bg-card-dark border-border-light dark:border-border-dark",
-                                    "hover:shadow-xl hover:border-purple-300 dark:hover:border-purple-700"
-                                )}
-                            >
-                                <div className={`p-3 rounded-xl inline-block mb-3 ${cat.bgColor}`}>
-                                    <span className={`material-symbols-outlined text-2xl ${cat.color}`}>{cat.icon}</span>
-                                </div>
-                                <div className="font-bold text-text-main dark:text-white">{cat.label}</div>
-                                <div className="text-xs text-text-muted mt-0.5">{cat.subtitle}</div>
-                            </motion.button>
-                        ))}
-                    </div>
-
-                    {/* AI Scanner Callout */}
-                    <div
-                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                        onDragLeave={() => setIsDragging(false)}
-                        onDrop={handleFileDrop}
-                        className={cn(
-                            "mt-8 w-full max-w-md border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all",
-                            isDragging ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20" : "border-neutral-300 dark:border-neutral-700 hover:border-purple-400",
-                            isScanning && "animate-pulse"
-                        )}
-                    >
-                        <span className="material-symbols-outlined text-3xl text-purple-500 mb-2">{isScanning ? 'hourglass_top' : 'document_scanner'}</span>
-                        <div className="font-semibold text-text-main dark:text-white">
-                            {isScanning ? 'Scanning receipt...' : 'Drop a receipt to auto-add'}
-                        </div>
-                        <div className="text-xs text-text-muted mt-1">AI extracts vendor, amount & category</div>
-                    </div>
-                </div>
-            ) : (
-                <>
-                    {/* AI Scanner - Compact */}
-                    <div
-                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                        onDragLeave={() => setIsDragging(false)}
-                        onDrop={handleFileDrop}
-                        className={cn(
-                            "border border-dashed rounded-xl p-4 flex items-center gap-4 cursor-pointer transition-all bg-neutral-50/50 dark:bg-neutral-900/50",
-                            isDragging ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" : "border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800",
-                            isScanning && "animate-pulse"
-                        )}
-                    >
-                        <div className={cn("p-2 rounded-lg", isDragging ? "bg-blue-500 text-white" : "bg-white dark:bg-neutral-800 shadow-sm")}>
-                            <span className="material-symbols-outlined text-xl text-neutral-600 dark:text-neutral-400">{isScanning ? 'hourglass_top' : 'document_scanner'}</span>
-                        </div>
-                        <div className="flex-1">
-                            <span className="font-semibold text-sm text-text-main dark:text-white">{isScanning ? 'Scanning...' : 'AI Receipt Scanner'}</span>
-                            <span className="text-xs text-text-muted ml-2">Drop image to auto-add</span>
-                        </div>
-                    </div>
-
-                    {/* Category Cards */}
                     <div>
-                        <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block pl-1">Add New Deduction</label>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {DEDUCTION_CATEGORIES.map(cat => (
-                                <motion.button
+                        <h4 className="font-semibold text-primary">Recommendation</h4>
+                        <p className="text-sm text-muted-foreground">
+                            {isStandardBetter
+                                ? `Take the Standard Deduction of $${STANDARD_DEDUCTION.toLocaleString()}. You need $${(STANDARD_DEDUCTION - totalDeductions).toLocaleString()} more to itemize.`
+                                : "You should Itemize! You have exceeded the standard deduction."}
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Column: Form/Selection */}
+                <div className="lg:col-span-2 space-y-6">
+                    {activeCategory ? (
+                        <Card className="border-primary/20 shadow-md">
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <div>
+                                    <CardTitle>
+                                        {editingId ? 'Edit Deduction' : `Add ${DEDUCTION_CATEGORIES.find(c => c.id === activeCategory)?.label}`}
+                                    </CardTitle>
+                                    <CardDescription>Enter the details below</CardDescription>
+                                </div>
+                                <Button variant="ghost" size="icon" onClick={resetForm}>
+                                    <Cross2Icon className="w-5 h-5" />
+                                </Button>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Description</label>
+                                    <Input
+                                        placeholder="e.g. Mortgage Interest, Charity Name"
+                                        value={form.description}
+                                        onChange={e => setForm({ ...form, description: e.target.value })}
+                                        autoFocus
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Amount</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
+                                        <Input
+                                            type="number"
+                                            className="pl-7"
+                                            value={form.amount || ''}
+                                            onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) })}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="pt-4 flex justify-end gap-2">
+                                    <Button variant="outline" onClick={resetForm}>Cancel</Button>
+                                    <Button onClick={handleSave}>
+                                        <CheckIcon className="mr-2 w-4 h-4" />
+                                        Save Deduction
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {DEDUCTION_CATEGORIES.map((cat) => (
+                                <Card
                                     key={cat.id}
-                                    whileHover={{ scale: 1.02, y: -2 }}
-                                    whileTap={{ scale: 0.98 }}
+                                    className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-md group"
                                     onClick={() => selectCategory(cat.id)}
-                                    className={cn(
-                                        "p-4 rounded-xl border text-left transition-all bg-white dark:bg-card-dark border-border-light dark:border-border-dark",
-                                        "hover:border-neutral-300 dark:hover:border-neutral-600 hover:shadow-lg"
-                                    )}
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-lg bg-neutral-50 dark:bg-neutral-800">
-                                            <span className="material-symbols-outlined text-lg text-neutral-600 dark:text-neutral-400">{cat.icon}</span>
+                                    <CardContent className="p-6 flex items-center gap-4">
+                                        <div className="p-3 rounded-xl bg-muted group-hover:bg-primary/10 transition-colors text-muted-foreground group-hover:text-primary">
+                                            <cat.icon className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <div className="font-semibold text-sm text-text-main dark:text-white">{cat.label}</div>
-                                            <div className="text-xs text-text-muted">{cat.subtitle}</div>
+                                            <h3 className="font-semibold">{cat.label}</h3>
+                                            <p className="text-sm text-muted-foreground">{cat.subtitle}</p>
                                         </div>
-                                    </div>
-                                </motion.button>
+                                    </CardContent>
+                                </Card>
                             ))}
                         </div>
-                    </div>
-
-                    {/* Existing Deductions List */}
-                    <div>
-                        <label className="text-xs font-bold text-text-muted uppercase tracking-wider mb-3 block pl-1">Your Deductions ({deductions.length})</label>
-                        <div className="space-y-3">
-                            {deductions.map((item, idx) => {
-                                const style = getCategoryStyle(getCategoryForItem(item));
-                                return (
-                                    <motion.div
-                                        key={item.id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.05 }}
-                                        className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-card-dark border border-border-light dark:border-border-dark hover:shadow-md hover:border-neutral-300 dark:hover:border-neutral-600 transition-all group"
-                                    >
-                                        <div className="p-2 rounded-lg bg-neutral-50 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800">
-                                            <span className="material-symbols-outlined text-neutral-600 dark:text-neutral-400">{style?.icon || 'receipt'}</span>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="font-semibold text-text-main dark:text-white truncate">{item.description}</div>
-                                            <div className="text-xs text-text-muted">{style?.label}</div>
-                                        </div>
-                                        <div className="text-lg font-bold text-text-main dark:text-white font-mono tracking-tight">${item.amount.toLocaleString()}</div>
-                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => handleEdit(item)} className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors">
-                                                <span className="material-symbols-outlined text-lg text-text-muted">edit</span>
-                                            </button>
-                                            <button onClick={() => handleDelete(item.id)} className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors group/delete">
-                                                <span className="material-symbols-outlined text-lg text-neutral-400 group-hover/delete:text-red-500 transition-colors">delete</span>
-                                            </button>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </>
-            )}
-
-            {/* Wizard Panel */}
-            <WizardPanel
-                isOpen={!!activeCategory}
-                onClose={resetForm}
-                title={editingId ? `Edit Deduction` : `Add ${getCategoryStyle(activeCategory as any)?.label}`}
-            >
-                <div className="space-y-8 pb-10">
-                    {/* Description */}
-                    <div>
-                        <label className="text-xs font-bold text-zinc-400 block mb-2 uppercase tracking-widest">Description</label>
-                        <input
-                            value={form.description}
-                            onChange={e => setForm({ ...form, description: e.target.value })}
-                            className="w-full rounded-xl border-2 border-white/10 bg-white/5 px-5 py-4 outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 text-lg font-medium text-white placeholder-zinc-600 transition-all"
-                            placeholder="e.g. ABC Hospital"
-                            autoFocus
-                        />
-                    </div>
-
-                    {/* Dynamic Fields by Category */}
-                    {activeCategory === 'health' && (
-                        <div className="space-y-6">
-                            <div>
-                                <label className="text-xs font-bold text-zinc-400 block mb-2 uppercase tracking-widest">Type</label>
-                                <select
-                                    value={form.category}
-                                    onChange={e => setForm(f => ({ ...f, category: e.target.value as any }))}
-                                    className="w-full rounded-xl border-2 border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-primary text-white transition-all"
-                                >
-                                    <option value="hsa_contrib">HSA Contribution</option>
-                                    <option value="medical">Medical Expense</option>
-                                    <option value="fsa">FSA Contribution</option>
-                                </select>
-                            </div>
-                            <CurrencyInput label="Amount" value={form.amount || 0} onChange={v => setForm({ ...form, amount: v })} />
-                        </div>
                     )}
 
-                    {activeCategory === 'home' && (
-                        <div className="space-y-6">
-                            <div>
-                                <label className="text-xs font-bold text-zinc-400 block mb-2 uppercase tracking-widest">Type</label>
-                                <select
-                                    value={form.category}
-                                    onChange={e => setForm(f => ({ ...f, category: e.target.value as any }))}
-                                    className="w-full rounded-xl border-2 border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-primary text-white transition-all"
-                                >
-                                    <option value="mortgage">Mortgage Interest (1098)</option>
-                                    <option value="property_tax">Property Tax</option>
-                                    <option value="salt">SALT (State/Local Tax)</option>
-                                </select>
+                    {/* Deductions List */}
+                    <div className="space-y-4 pt-4">
+                        <h3 className="text-lg font-semibold tracking-tight">Your Deductions</h3>
+                        {deductions.length === 0 ? (
+                            <div className="text-center py-12 border-2 border-dashed rounded-xl text-muted-foreground">
+                                No deductions added yet. Select a category above.
                             </div>
-                            <CurrencyInput label="Amount" value={form.amount || 0} onChange={v => setForm({ ...form, amount: v })} />
-                        </div>
-                    )}
-
-                    {activeCategory === 'charity' && (
-                        <div className="space-y-6">
-                            <div>
-                                <label className="text-xs font-bold text-zinc-400 block mb-2 uppercase tracking-widest">Type</label>
-                                <select
-                                    value={form.category}
-                                    onChange={e => setForm(f => ({ ...f, category: e.target.value as any }))}
-                                    className="w-full rounded-xl border-2 border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-primary text-white transition-all"
-                                >
-                                    <option value="charity_cash">Cash Donation</option>
-                                    <option value="charity_noncash">Non-Cash (Goods)</option>
-                                </select>
-                            </div>
-                            <CurrencyInput label="Amount / Fair Market Value" value={form.amount || 0} onChange={v => setForm({ ...form, amount: v })} />
-                        </div>
-                    )}
-
-                    {activeCategory === 'credits' && (
-                        <div className="space-y-6">
-                            <div>
-                                <label className="text-xs font-bold text-zinc-400 block mb-2 uppercase tracking-widest">Credit Type</label>
-                                <select
-                                    value={form.category}
-                                    onChange={e => setForm(f => ({ ...f, category: e.target.value as any }))}
-                                    className="w-full rounded-xl border-2 border-white/10 bg-white/5 px-4 py-3 outline-none focus:border-primary text-white transition-all"
-                                >
-                                    <option value="energy_credit">Residential Energy (Solar)</option>
-                                    <option value="ev_credit">EV Credit</option>
-                                    <option value="adoption_credit">Adoption Credit</option>
-                                </select>
-                            </div>
-                            <CurrencyInput label="Qualified Cost" value={form.amount || 0} onChange={v => setForm({ ...form, amount: v })} />
-                        </div>
-                    )}
-
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleSave}
-                        className="w-full bg-gradient-to-r from-primary via-accent-cyan to-accent-pink text-white font-bold py-4 rounded-xl shadow-glow-sm transition-all flex items-center justify-center gap-2"
-                    >
-                        <span className="material-symbols-outlined">check</span>
-                        {editingId ? 'Save Changes' : 'Add Deduction'}
-                    </button>
-
-                    {/* Contextual Tips */}
-                    <div className="pt-6 border-t border-border-light dark:border-neutral-800">
-                        {activeCategory === 'health' && (
-                            <GuideTip
-                                title="HSA is Triple Tax-Free"
-                                content="Contributions reduce taxable income, grow tax-free, and withdrawals for medical expenses are tax-free. Max it out if you can!"
-                                icon="medical_services"
-                                variant="highlight"
-                            />
-                        )}
-                        {activeCategory === 'home' && (
-                            <GuideTip
-                                title="SALT Cap ($10,000)"
-                                content="You can only deduct up to $10,000 combined for State, Local, and Property taxes. Anything above that is lost."
-                                icon="public"
-                                variant="highlight"
-                            />
-                        )}
-                        {activeCategory === 'charity' && (
-                            <GuideTip
-                                title="Paper Trail Required"
-                                content="For donations >$250, bank records aren't enough. You need a letter/receipt from the charity to claim it."
-                                icon="volunteer_activism"
-                                variant="highlight"
-                            />
-                        )}
-                    </div>
-                </div>
-            </WizardPanel>
-
-            {/* Deductions List */}
-            {deductions.length > 0 ? (
-                <div className="space-y-4">
-                    <h3 className="text-lg font-display font-bold text-white">Your Deductions</h3>
-                    <div className="grid gap-3">
-                        <AnimatePresence>
-                            {deductions.map((item, i) => {
-                                const catStyle = getCategoryStyle(getCategoryForItem(item));
-                                return (
-                                    <motion.div
-                                        key={item.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
-                                        transition={{ delay: i * 0.05 }}
-                                        onClick={() => handleEdit(item)}
-                                        className="flex justify-between items-center p-5 rounded-2xl glass-card cursor-pointer group hover:ring-1 hover:ring-primary/30 transition-all"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className={cn(
-                                                "w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br",
-                                                catStyle?.gradient
-                                            )}>
-                                                <span className="material-symbols-outlined text-white">{catStyle?.icon}</span>
-                                            </div>
-                                            <div>
-                                                <div className="font-bold text-white flex items-center gap-2">
-                                                    {item.description}
-                                                    {item.details?.ai_scanned && (
-                                                        <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-bold uppercase">AI Scanned</span>
-                                                    )}
-                                                    <span className="material-symbols-outlined text-sm opacity-0 group-hover:opacity-100 transition-opacity text-zinc-500">edit</span>
+                        ) : (
+                            <div className="space-y-3">
+                                <AnimatePresence>
+                                    {deductions.map((item) => (
+                                        <motion.div
+                                            key={item.id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="p-2 rounded-md bg-muted">
+                                                    <CheckIcon />
                                                 </div>
-                                                <div className="text-xs text-zinc-500 uppercase mt-1">{item.category.replace('_', ' ')}</div>
+                                                <div>
+                                                    <div className="font-medium">{item.description}</div>
+                                                    <div className="text-xs text-muted-foreground capitalize">{item.category.replace('_', ' ')}</div>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <div className="font-display font-bold text-xl text-white tabular-nums">${item.amount.toLocaleString()}</div>
-                                            <motion.button
-                                                whileHover={{ scale: 1.1 }}
-                                                whileTap={{ scale: 0.9 }}
-                                                onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
-                                                className="p-2 rounded-lg text-zinc-500 hover:text-danger hover:bg-danger/10 transition-all opacity-0 group-hover:opacity-100"
-                                            >
-                                                <span className="material-symbols-outlined">delete</span>
-                                            </motion.button>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
-                        </AnimatePresence>
+                                            <div className="flex items-center gap-4">
+                                                <div className="font-bold tabular-nums">${item.amount.toLocaleString()}</div>
+                                                <div className="flex gap-1">
+                                                    <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+                                                        <Pencil1Icon className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>
+                                                        <TrashIcon className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
+                            </div>
+                        )}
                     </div>
                 </div>
-            ) : (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-center py-16 gradient-border rounded-2xl"
-                >
-                    <div className="p-4 bg-white/5 rounded-full inline-block mb-4">
-                        <span className="material-symbols-outlined text-4xl text-zinc-500">receipt</span>
-                    </div>
-                    <h3 className="text-xl font-display font-bold text-white mb-2">No deductions added yet</h3>
-                    <p className="text-zinc-500 max-w-md mx-auto">Select a deduction type above or drop a receipt to get started.</p>
-                </motion.div>
-            )}
+
+                {/* Summary Column */}
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base">Deduction Breakdown</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-muted-foreground">Standard Deduction</span>
+                                    <span className="font-medium">${STANDARD_DEDUCTION.toLocaleString()}</span>
+                                </div>
+                                <div className="h-px bg-border" />
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-muted-foreground">Your Itemized Total</span>
+                                    <span className={cn("font-bold", isStandardBetter ? "text-muted-foreground" : "text-emerald-600")}>
+                                        ${totalDeductions.toLocaleString()}
+                                    </span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
         </div>
     );
 };
