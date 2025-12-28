@@ -1,7 +1,7 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IncomeItem, TaxPayer } from '../types';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { cn } from '../lib/utils';
@@ -15,7 +15,11 @@ import {
     CheckIcon,
     Cross2Icon,
     UploadIcon,
-    ReloadIcon
+    ReloadIcon,
+    MagicWandIcon,
+    ChevronRightIcon,
+    PlusIcon,
+    MixIcon,
 } from '@radix-ui/react-icons';
 import PaystubIngestionModal from '../components/PaystubIngestionModal';
 
@@ -27,15 +31,16 @@ interface IncomePageProps {
 }
 
 const INCOME_CATEGORIES = [
-    { id: 'W-2', label: 'W-2 Employment', subtitle: 'Wages & salaries', icon: PersonIcon },
-    { id: 'Business', label: 'Self-Employment', subtitle: '1099-NEC, Freelance', icon: HomeIcon },
-    { id: 'Investment', label: 'Investments', subtitle: 'Dividends, interest', icon: RocketIcon },
-    { id: 'Rental', label: 'Rental Property', subtitle: 'Real estate', icon: PieChartIcon },
+    { id: 'W-2', label: 'W-2 Wage', subtitle: 'Standard Employment', icon: PersonIcon, type: 'w2' },
+    { id: 'Business', label: '1099-NEC', subtitle: 'Self-Employed / Freelance', icon: RocketIcon, type: '1099_nec' },
+    { id: 'Investment', label: 'Investment', subtitle: 'Dividends & Interest', icon: MixIcon, type: '1099_div' },
+    { id: 'Rental', label: 'Real Estate', subtitle: 'Rental & Royalty', icon: HomeIcon, type: 'rental' },
 ];
 
 const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult, taxPayer }) => {
+    const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+    const [isCreating, setIsCreating] = useState(false);
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
-    const [editingId, setEditingId] = useState<string | null>(null);
     const [showPaystubModal, setShowPaystubModal] = useState(false);
     const [form, setForm] = useState<Partial<IncomeItem>>({
         description: '',
@@ -44,37 +49,33 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
         type: 'w2',
     });
 
-    const resetForm = () => {
-        setEditingId(null);
-        setActiveCategory(null);
-        setForm({ description: '', amount: 0, withholding: 0, type: 'w2' });
+    const selectedItem = incomes.find(i => i.id === selectedItemId);
+
+    const handleNew = (cat: typeof INCOME_CATEGORIES[0]) => {
+        setIsCreating(true);
+        setSelectedItemId(null);
+        setActiveCategory(cat.id);
+        setForm({
+            description: '',
+            amount: 0,
+            withholding: 0,
+            type: cat.type as any,
+            payFrequency: 'annual',
+            owner: 'primary'
+        });
     };
 
-    const selectCategory = (catId: string) => {
-        setActiveCategory(catId);
-        setEditingId(null);
-        let type: IncomeItem['type'] = 'w2';
-        if (catId === 'Business') type = '1099_nec';
-        if (catId === 'Investment') type = '1099_div';
-        if (catId === 'Rental') type = 'rental';
-        setForm({ description: '', amount: 0, withholding: 0, type });
-    };
-
-    const handleEdit = (item: IncomeItem) => {
-        if (item.originalPaystub) {
-            setShowPaystubModal(true);
-            return;
-        }
-        setEditingId(item.id);
-        setActiveCategory('W-2');
+    const handleSelect = (item: IncomeItem) => {
+        setSelectedItemId(item.id);
+        setIsCreating(false);
         setForm(item);
     };
 
     const handleSave = () => {
-        if (!form.description || !form.amount) return;
+        if (!form.description || (form.amount === undefined)) return;
 
         const newItem: IncomeItem = {
-            id: editingId || Math.random().toString(36).substr(2, 9),
+            id: selectedItemId || Math.random().toString(36).substr(2, 9),
             description: form.description,
             amount: Number(form.amount),
             withholding: Number(form.withholding) || 0,
@@ -84,16 +85,19 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
             details: {}
         };
 
-        if (editingId) {
-            setIncomes(incomes.map(i => i.id === editingId ? newItem : i));
+        if (selectedItemId) {
+            setIncomes(incomes.map(i => i.id === selectedItemId ? newItem : i));
         } else {
             setIncomes([...incomes, newItem]);
         }
-        resetForm();
+        setIsCreating(false);
+        setSelectedItemId(newItem.id);
     };
 
-    const handleDelete = (id: string) => {
+    const handleDelete = (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
         setIncomes(incomes.filter(i => i.id !== id));
+        if (selectedItemId === id) setSelectedItemId(null);
     };
 
     const handlePaystubImport = (item: IncomeItem) => {
@@ -104,13 +108,11 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
             setIncomes([...incomes, item]);
         }
         setShowPaystubModal(false);
+        setSelectedItemId(item.id);
     };
 
-    const totalIncome = incomes.reduce((a, b) => a + b.amount, 0);
-    const totalWithholding = incomes.reduce((a, b) => a + (b.withholding || 0), 0);
-
     return (
-        <div className="max-w-5xl mx-auto space-y-6">
+        <div className="flex flex-col gap-8">
             {showPaystubModal && (
                 <PaystubIngestionModal
                     onSave={handlePaystubImport}
@@ -118,168 +120,223 @@ const IncomePage: React.FC<IncomePageProps> = ({ incomes, setIncomes, taxResult,
                 />
             )}
 
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold">Income & Wages</h1>
-                    <p className="text-muted-foreground text-sm">Add your income sources for accurate tax calculation</p>
-                </div>
-                <div className="flex gap-3">
-                    <Card className="px-4 py-2 border-l-2 border-l-primary">
-                        <div className="text-xs text-muted-foreground">Total Income</div>
-                        <div className="text-lg font-bold">${totalIncome.toLocaleString()}</div>
-                    </Card>
-                    <Card className="px-4 py-2 border-l-2 border-l-emerald-500">
-                        <div className="text-xs text-muted-foreground">Withheld</div>
-                        <div className="text-lg font-bold">${totalWithholding.toLocaleString()}</div>
-                    </Card>
-                </div>
-            </div>
-
-            {/* AI Paystub Scanner */}
-            <Card
-                className="border-dashed border-2 hover:border-primary/50 cursor-pointer transition-colors group"
+            {/* AI Call-to-Action */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="relative group cursor-pointer"
                 onClick={() => setShowPaystubModal(true)}
             >
-                <CardContent className="p-4 flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                        <UploadIcon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1">
-                        <h3 className="font-semibold">AI Paystub Scanner</h3>
-                        <p className="text-sm text-muted-foreground">Upload a paystub to automatically extract income data and extrapolate yearly totals</p>
-                    </div>
-                    <RocketIcon className="w-5 h-5 text-muted-foreground" />
-                </CardContent>
-            </Card>
-
-            {/* Category Selection or Form */}
-            {activeCategory ? (
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-4">
-                        <CardTitle className="text-base">
-                            {editingId ? 'Edit Income' : `Add ${INCOME_CATEGORIES.find(c => c.id === activeCategory)?.label}`}
-                        </CardTitle>
-                        <Button variant="ghost" size="icon" onClick={resetForm}>
-                            <Cross2Icon className="w-4 h-4" />
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                <Card className="relative bg-card/50 backdrop-blur-xl border-primary/20 hover:border-primary/40 transition-all duration-500">
+                    <CardContent className="p-6 flex flex-col md:flex-row items-center gap-6">
+                        <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500">
+                            <MagicWandIcon className="h-7 w-7" />
+                        </div>
+                        <div className="flex-1 text-center md:text-left space-y-1">
+                            <h3 className="text-xl font-bold tracking-tight">AI Paystub Intelligence</h3>
+                            <p className="text-sm text-muted-foreground">Upload your latest paystub. We'll extract all earnings, taxes, and extrapolate your 2025 totals instantly.</p>
+                        </div>
+                        <Button variant="premium" className="h-12 px-8 rounded-xl shadow-xl">
+                            <UploadIcon className="mr-2 h-4 w-4" />
+                            Scan Document
                         </Button>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Description</label>
-                            <Input
-                                placeholder="e.g. Employer Name"
-                                value={form.description}
-                                onChange={e => setForm({ ...form, description: e.target.value })}
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Annual Amount</label>
-                                <div className="relative">
-                                    <span className="absolute left-3 top-2.5 text-muted-foreground text-sm">$</span>
-                                    <Input
-                                        type="number"
-                                        className="pl-7"
-                                        value={form.amount || ''}
-                                        onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) })}
-                                    />
-                                </div>
-                            </div>
-                            {activeCategory === 'W-2' && (
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Tax Withheld</label>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-2.5 text-muted-foreground text-sm">$</span>
-                                        <Input
-                                            type="number"
-                                            className="pl-7"
-                                            value={form.withholding || ''}
-                                            onChange={e => setForm({ ...form, withholding: parseFloat(e.target.value) })}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                        <div className="flex justify-end gap-2 pt-2">
-                            <Button variant="outline" onClick={resetForm}>Cancel</Button>
-                            <Button onClick={handleSave}>
-                                <CheckIcon className="mr-2 w-4 h-4" />
-                                Save
-                            </Button>
-                        </div>
                     </CardContent>
                 </Card>
-            ) : (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                    {INCOME_CATEGORIES.map((cat) => (
-                        <Card
-                            key={cat.id}
-                            className="cursor-pointer hover:border-primary/50 hover:shadow-sm transition-all group"
-                            onClick={() => selectCategory(cat.id)}
-                        >
-                            <CardContent className="p-4 flex items-center gap-3">
-                                <div className="p-2 rounded-md bg-muted group-hover:bg-primary/10 transition-colors">
-                                    <cat.icon className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
-                                </div>
-                                <div>
-                                    <h3 className="font-medium text-sm">{cat.label}</h3>
-                                    <p className="text-xs text-muted-foreground">{cat.subtitle}</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            )}
+            </motion.div>
 
-            {/* Income List */}
-            <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-muted-foreground">Income Sources ({incomes.length})</h3>
-                {incomes.length === 0 ? (
-                    <div className="text-center py-8 border rounded-lg text-muted-foreground text-sm">
-                        No income added yet. Use the AI scanner or select a category above.
+            {/* Master-Detail Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+                {/* Master: List of Items */}
+                <div className="lg:col-span-5 space-y-6">
+                    <div className="flex items-center justify-between px-2">
+                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Income Sources</h3>
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                            {incomes.length} Entries
+                        </div>
                     </div>
-                ) : (
-                    <div className="space-y-2">
-                        {incomes.map((item) => (
-                            <div
-                                key={item.id}
-                                className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors group"
+
+                    <div className="grid grid-cols-2 gap-3 pb-2">
+                        {INCOME_CATEGORIES.map(cat => (
+                            <button
+                                key={cat.id}
+                                onClick={() => handleNew(cat)}
+                                className="flex flex-col items-start p-4 rounded-xl border bg-secondary/20 hover:bg-secondary/40 hover:border-primary/30 transition-all group text-left"
                             >
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-md bg-muted">
-                                        {item.type === 'w2' ? <PersonIcon className="w-4 h-4" /> :
-                                            item.type === 'rental' ? <PieChartIcon className="w-4 h-4" /> :
-                                                <RocketIcon className="w-4 h-4" />}
-                                    </div>
-                                    <div>
-                                        <div className="font-medium text-sm">{item.description}</div>
-                                        <div className="text-xs text-muted-foreground capitalize">
-                                            {item.type.replace('_', ' ')}
-                                            {item.originalPaystub && <span className="ml-2 text-primary">• AI Scanned</span>}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="text-right">
-                                        <div className="font-semibold">${item.amount.toLocaleString()}</div>
-                                        {item.withholding > 0 && (
-                                            <div className="text-xs text-muted-foreground">-${item.withholding.toLocaleString()} tax</div>
-                                        )}
-                                    </div>
-                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(item)}>
-                                            <Pencil1Icon className="w-3 h-3" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(item.id)}>
-                                            <TrashIcon className="w-3 h-3" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
+                                <cat.icon className="h-4 w-4 text-muted-foreground mb-3 group-hover:text-primary transition-colors" />
+                                <span className="text-xs font-bold">{cat.label}</span>
+                                <span className="text-[10px] text-muted-foreground/70">{cat.subtitle}</span>
+                            </button>
                         ))}
                     </div>
-                )}
+
+                    <div className="space-y-3">
+                        <AnimatePresence mode="popLayout">
+                            {incomes.map((item) => (
+                                <motion.div
+                                    layout
+                                    key={item.id}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    onClick={() => handleSelect(item)}
+                                    className={cn(
+                                        "group relative flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all duration-300",
+                                        selectedItemId === item.id
+                                            ? "bg-primary/5 border-primary ring-1 ring-primary/20 shadow-lg"
+                                            : "hover:bg-secondary/50 hover:border-foreground/20"
+                                    )}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className={cn(
+                                            "h-10 w-10 rounded-lg flex items-center justify-center transition-colors duration-300",
+                                            selectedItemId === item.id ? "bg-primary text-white" : "bg-secondary text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary"
+                                        )}>
+                                            <RocketIcon className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-sm tracking-tight">{item.description}</div>
+                                            <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest flex items-center gap-2">
+                                                {item.type.replace('_', ' ')}
+                                                {item.originalPaystub && <span className="text-primary italic">• AI Scanned</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right flex items-center gap-4">
+                                        <div className="font-black text-sm tabular-nums">${item.amount.toLocaleString()}</div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-muted-foreground/40 hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                                            onClick={(e) => handleDelete(e, item.id)}
+                                        >
+                                            <TrashIcon className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                        {incomes.length === 0 && (
+                            <div className="text-center py-12 border border-dashed rounded-2xl bg-secondary/10">
+                                <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4 grayscale">
+                                    <RocketIcon className="h-6 w-6" />
+                                </div>
+                                <h4 className="text-sm font-bold text-muted-foreground">No income streams logged</h4>
+                                <p className="text-xs text-muted-foreground/60">Choose a category above or scan a paystub</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Detail: Editor / Viewer */}
+                <div className="lg:col-span-7 sticky top-28">
+                    <AnimatePresence mode="wait">
+                        {(selectedItemId || isCreating) ? (
+                            <motion.div
+                                key={selectedItemId || 'new'}
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                            >
+                                <Card className="border-0 shadow-2xl overflow-hidden glass-card">
+                                    <CardHeader className="bg-gradient-to-r from-secondary/50 to-transparent p-8">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                                                {isCreating ? 'Provisioning Entry' : 'Entry Intelligence'}
+                                            </div>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => { setIsCreating(false); setSelectedItemId(null); }}>
+                                                <Cross2Icon className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                        <CardTitle className="text-2xl font-black">{isCreating ? 'New Revenue Stream' : form.description}</CardTitle>
+                                        <CardDescription>Adjust fiscal parameters and tax withholdings</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="p-8 space-y-8">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Description / Entity</label>
+                                                <Input
+                                                    className="h-12 rounded-xl bg-secondary/30 border-0 focus-visible:ring-primary focus-visible:bg-background transition-all"
+                                                    placeholder="Stripe, Inc."
+                                                    value={form.description}
+                                                    onChange={e => setForm({ ...form, description: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Type Coverage</label>
+                                                <select
+                                                    className="w-full h-12 rounded-xl bg-secondary/30 border-0 focus-visible:ring-primary focus-visible:bg-background transition-all px-4 text-sm font-medium"
+                                                    value={form.type}
+                                                    onChange={e => setForm({ ...form, type: e.target.value as any })}
+                                                >
+                                                    <option value="w2">W-2 Salary</option>
+                                                    <option value="1099_nec">1099-NEC Self-Employment</option>
+                                                    <option value="1099_div">Investment Dividend</option>
+                                                    <option value="rental">Real Estate Revenue</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="group relative">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Annualized Gross Value</label>
+                                                <div className="relative">
+                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg italic">$</span>
+                                                    <Input
+                                                        type="number"
+                                                        className="h-20 rounded-2xl bg-secondary/30 border-0 text-3xl font-black pl-10 focus-visible:ring-primary focus-visible:bg-background transition-all"
+                                                        value={form.amount || ''}
+                                                        onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) })}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="group relative">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">Total Federal Withholding</label>
+                                                <div className="relative">
+                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg italic">$</span>
+                                                    <Input
+                                                        type="number"
+                                                        className="h-20 rounded-2xl bg-secondary/30 border-0 text-3xl font-black pl-10 focus-visible:ring-primary focus-visible:bg-background transition-all"
+                                                        value={form.withholding || ''}
+                                                        onChange={e => setForm({ ...form, withholding: parseFloat(e.target.value) })}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-3 pt-6">
+                                            <Button variant="premium" className="flex-1 h-14 rounded-xl text-md font-bold" onClick={handleSave}>
+                                                <CheckIcon className="mr-2 h-5 w-5" />
+                                                Commit Changes
+                                            </Button>
+                                            <Button variant="outline" className="h-14 w-14 rounded-xl border-border/50" onClick={() => { setIsCreating(false); setSelectedItemId(null); }}>
+                                                <Cross2Icon className="h-5 w-5" />
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="h-full flex items-center justify-center p-12 border-2 border-dashed rounded-3xl opacity-30 group hover:opacity-100 transition-opacity duration-500"
+                            >
+                                <div className="text-center space-y-4">
+                                    <div className="h-20 w-20 rounded-3xl bg-secondary flex items-center justify-center mx-auto group-hover:rotate-12 transition-transform duration-500">
+                                        <RocketIcon className="h-10 w-10 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xl font-black">Entry Intelligence</h4>
+                                        <p className="max-w-[240px] text-sm text-muted-foreground font-medium">Select an income stream from the console to evaluate fiscal metrics.</p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
             </div>
         </div>
     );
